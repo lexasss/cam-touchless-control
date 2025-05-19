@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HandTracker", "HandTracker\HandTracker.csproj", "{C48B756D-38F4-450E-B038-14B80C043D4F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C48B756D-38F4-450E-B038-14B80C043D4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C48B756D-38F4-450E-B038-14B80C043D4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C48B756D-38F4-450E-B038-14B80C043D4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C48B756D-38F4-450E-B038-14B80C043D4F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {ED32D972-EF9F-40A8-96CC-4B40DC89C3C9}
+	EndGlobalSection
+EndGlobal
