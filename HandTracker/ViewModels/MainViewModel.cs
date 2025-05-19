@@ -2,6 +2,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
 namespace HandTracker;
@@ -78,7 +80,64 @@ internal class MainViewModel : INotifyPropertyChanged
         }
     } = false;
 
+    public bool IsCapturing
+    {
+        get => field;
+        set
+        {
+            if (field == value)
+                return;
+
+            field = value;
+            if (value && SelectedCamera != null)
+            {
+                field = _imageSource.Open(SelectedCamera);
+            }
+            else
+            {
+                _imageSource.CloseCurrentVideoSource();
+                ImageSource = null;
+            }
+
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsCapturing)));
+        }
+    } = false;
+
+    public string? SelectedCamera
+    {
+        get => field;
+        set
+        {
+            field = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedCamera)));
+
+            HasSelectedCamera = value != null;
+        }
+    } = null;
+
+    public bool HasSelectedCamera
+    {
+        get => field;
+        private set
+        {
+            field = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasSelectedCamera)));
+        }
+    }
+
+    public BitmapSource? ImageSource
+    {
+        get => field;
+        private set
+        {
+            field = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ImageSource)));
+        }
+    } = null;
+
     public ObservableCollection<LeapMotionDevice> Devices { get; } = [];
+
+    public ObservableCollection<string> Cameras { get; } = [];
 
     /// <summary>
     /// Maximum distance for the hand to be tracked, in cm
@@ -94,10 +153,17 @@ internal class MainViewModel : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public MainViewModel(LeapMotion? lm, Dispatcher dispatcher)
+    public MainViewModel(LeapMotion? lm, ImageSource imageSource, Dispatcher dispatcher)
     {
         _lm = lm;
+        _imageSource = imageSource;
         _dispatcher = dispatcher;
+
+        _imageSource.CameraAdded += (s, e) => Cameras.Add(e);
+        _imageSource.Image += (s, e) => { if (IsCapturing) ImageSource = e; };
+        _imageSource.EnumCameras();
+
+        EnsureSomeCameraIsSelected();
 
         if (_lm != null)
         {
@@ -131,6 +197,7 @@ internal class MainViewModel : INotifyPropertyChanged
     // Internal
 
     readonly LeapMotion? _lm = null;
+    readonly ImageSource _imageSource;
     readonly Dispatcher _dispatcher;
 
     private void EnsureSomeDeviceIsSelected()
@@ -138,6 +205,14 @@ internal class MainViewModel : INotifyPropertyChanged
         if (Devices.Count > 0 && SelectedDevice == null)
         {
             SelectedDevice = Devices.First();
+        }
+    }
+
+    private void EnsureSomeCameraIsSelected()
+    {
+        if (Cameras.Count > 0 && SelectedCamera == null)
+        {
+            SelectedCamera = Cameras.First();
         }
     }
 

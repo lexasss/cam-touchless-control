@@ -82,17 +82,57 @@
                 </Style>
             </Grid.Style>
 
-            <WrapPanel HorizontalAlignment="Center"
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <WrapPanel Grid.Row="0" Grid.Column="0"
+                       HorizontalAlignment="Center"
                        Margin="12">
-                <Label VerticalAlignment="Center">Device</Label>
+                <Label VerticalAlignment="Center">Tracking device</Label>
                 <ComboBox MinWidth="160"
                           Margin="12,0"
-                          IsEnabled="{Binding ElementName=tbnToggleDevice, Path=IsChecked, Converter={StaticResource negate}}"
+                          IsEnabled="{Binding ElementName=tbnToggleTrackingDevice, Path=IsChecked, Converter={StaticResource negate}}"
                           ItemsSource="{Binding Devices}"
                           SelectedItem="{Binding SelectedDevice}"/>
-                <ToggleButton Name="tbnToggleDevice" IsEnabled="{Binding HasSelectedDevice}"
+                <ToggleButton Name="tbnToggleTrackingDevice"
+                              IsEnabled="{Binding HasSelectedDevice}"
                               Command="{x:Static commands:ToggleDevice.Instance}" />
             </WrapPanel>
+
+            <WrapPanel Grid.Row="0" Grid.Column="1"
+                       HorizontalAlignment="Center"
+                       Margin="12">
+                <Label VerticalAlignment="Center">Camera</Label>
+                <ComboBox MinWidth="160"
+                          Margin="12,0"
+                          IsEnabled="{Binding ElementName=tbnToggleCamera, Path=IsChecked, Converter={StaticResource negate}}"
+                          ItemsSource="{Binding Cameras}"
+                          SelectedItem="{Binding SelectedCamera}"/>
+                <ToggleButton Name="tbnToggleCamera"
+                              IsEnabled="{Binding HasSelectedCamera}"
+                              Command="{x:Static commands:ToggleCamera.Instance}" />
+            </WrapPanel>
+
+            <Grid Grid.Row="1" Grid.ColumnSpan="2"
+                  Background="Black">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsCapturing}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Image Margin="12"
+                   Source="{Binding ImageSource}"/>
+            </Grid>
         </Grid>
     </Grid>
 </Window>
