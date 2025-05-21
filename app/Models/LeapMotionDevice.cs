@@ -1,4 +1,4 @@
-﻿namespace HandTracker;
+﻿namespace CameraTouchlessControl;
 
 public class LeapMotionDevice(Leap.Device device)
 {

@@ -1,11 +1,12 @@
 ﻿using Leap;
+using OpenCvSharp.WpfExtensions;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
-namespace HandTracker;
+namespace CameraTouchlessControl;
 
 internal class MainViewModel : INotifyPropertyChanged
 {
@@ -93,15 +94,16 @@ internal class MainViewModel : INotifyPropertyChanged
                 if (SelectedCamera != null)
                 {
                     field = _cameraService.Open(SelectedCamera);
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsCameraCapturing)));
                 }
             }
             else
             {
-                _cameraService.CloseCurrentVideoSource();
+                _cameraService.ShutdownCapture();
                 CameraFrame = null;
-            }
 
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsCameraCapturing)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsCameraCapturing)));
+            }
         }
     } = false;
 
@@ -161,12 +163,26 @@ internal class MainViewModel : INotifyPropertyChanged
         _cameraService = cameraService;
         _dispatcher = dispatcher;
 
-        _cameraService.CameraAdded += (s, e) => _dispatcher.Invoke(() => Cameras.Insert(e.Location, e.Name));
-        _cameraService.CameraRemoved += (s, e) => _dispatcher.Invoke(() => Cameras.Remove(e));
-        _cameraService.Frame += (s, e) => { if (IsCameraCapturing) CameraFrame = e; };
-        _cameraService.UpdateCameralist();
+        _cameraService.CameraAdded += (s, e) => _dispatcher.Invoke(() =>
+        {
+            Cameras.Insert(e.Location, e.Name);
+            EnsureSomeCameraIsSelected();
+        });
+        _cameraService.CameraRemoved += (s, e) => _dispatcher.Invoke(() =>
+        {
+            Cameras.Remove(e);
+            EnsureSomeCameraIsSelected();
+        });
+        _cameraService.Frame += (s, e) => _dispatcher.Invoke(() =>
+        {
+            if (IsCameraCapturing) CameraFrame = e.ToBitmapSource();
+        });
 
-        EnsureSomeCameraIsSelected();
+        Task.Run(async () =>
+        {
+            await _cameraService.UpdateCameralist();
+            EnsureSomeCameraIsSelected();
+        });
 
         if (_handTrackingService != null)
         {

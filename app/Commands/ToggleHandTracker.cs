@@ -1,6 +1,6 @@
 ﻿using System.Windows.Input;
 
-namespace HandTracker.Commands;
+namespace CameraTouchlessControl.Commands;
 
 internal class ToggleHandTracker
 {

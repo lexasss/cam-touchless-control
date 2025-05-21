@@ -1,16 +1,19 @@
-﻿using System.Management;
+﻿using Leap;
+using System.Collections;
+using System.Management;
 
-namespace HandTracker;
+namespace CameraTouchlessControl;
 
 /// <summary>
-/// Manages the ist of available USB cameras, and fires events when this list changes.
+/// Manages a ist of available USB devices of a certain PNP class
+/// and fires events when this list changes.
 /// </summary>
 public class UsbService : IDisposable
 {
     /// <summary>
-    /// Port descriptor
+    /// Device descriptor
     /// </summary>
-    public class UsbCamera(string id, string name, string? description, string? manufacturer)
+    public class UsbDevice(string id, string name, string? description, string? manufacturer)
     {
         public string ID { get; } = id;
         public string Name { get; } = name;
@@ -19,38 +22,28 @@ public class UsbService : IDisposable
     }
 
     /// <summary>
-    /// Fires when a USB camera becomes available
+    /// Fires when a USB device becomes available
     /// </summary>
-    public event EventHandler<UsbCamera>? Inserted
-    {
-        add
-        {
-            _inserted += value;
-            foreach (var camera in Cameras)
-            {
-                _inserted?.Invoke(this, camera);
-            }
-        }
-        remove
-        {
-            _inserted -= value;
-        }
-    }
+    public event EventHandler<UsbDevice>? Inserted;
 
     /// <summary>
-    /// Fires when a USB camera is removed
+    /// Fires when a USB device is removed
     /// </summary>
-    public event EventHandler<UsbCamera>? Removed;
+    public event EventHandler<UsbDevice>? Removed;
 
     /// <summary>
-    /// List of all USB cameras connected to the system
+    /// List of all USB devices connected to the system
     /// </summary>
-    public UsbCamera[] Cameras => GetAvailableCameras();
+    public UsbDevice[] Devices => GetAvailableDevices();
 
-    public UsbService()
+    public UsbService(string[] pnpClasses)
     {
+        _pnpClasses = pnpClasses;
+
         Listen("__InstanceCreationEvent", "Win32_USBControllerDevice", ActionType.Inserted);
         Listen("__InstanceDeletionEvent", "Win32_USBControllerDevice", ActionType.Removed);
+
+        GetAvailableDevices();
     }
 
     public void Dispose()
@@ -73,11 +66,9 @@ public class UsbService : IDisposable
         Removed
     }
 
-    event EventHandler<UsbCamera> _inserted = delegate { };
-
-    readonly List<UsbCamera> _cachedCameras = [];
-
+    readonly List<UsbDevice> _cachedDevices = [];
     readonly List<ManagementEventWatcher> _watchers = [];
+    readonly string[] _pnpClasses;
 
     private void Listen(string source, string target, ActionType actionType)
     {
@@ -92,22 +83,22 @@ public class UsbService : IDisposable
                 switch (actionType)
                 {
                     case ActionType.Inserted:
-                        var camera = CreateCamera(target.Properties);
-                        if (camera != null)
+                        var device = CreateDevice(target.Properties);
+                        if (device != null)
                         {
-                            _cachedCameras.Add(camera);
-                            _inserted?.Invoke(this, camera);
+                            _cachedDevices.Add(device);
+                            Inserted?.Invoke(this, device);
                         }
                         break;
                     case ActionType.Removed:
                         var deviceID = GetDeviceID(target.Properties);
                         if (deviceID != null)
                         {
-                            var cachedCamera = _cachedCameras.FirstOrDefault(camera => camera.ID == deviceID);
-                            if (cachedCamera != null)
+                            var cachedDevice = _cachedDevices.FirstOrDefault(device => device.ID == deviceID);
+                            if (cachedDevice != null)
                             {
-                                _cachedCameras.Remove(cachedCamera);
-                                Removed?.Invoke(this, cachedCamera);
+                                _cachedDevices.Remove(cachedDevice);
+                                Removed?.Invoke(this, cachedDevice);
                             }
                         }
                         break;
@@ -131,21 +122,28 @@ public class UsbService : IDisposable
         }
     }
 
-    private UsbCamera[] GetAvailableCameras()
+    private UsbDevice[] GetAvailableDevices()
     {
-        List<UsbCamera> cameras = [];
+        List<UsbDevice> devices = [];
 
         try
         {
-            using var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_PnPEntity WHERE Caption LIKE '%Camera%'");
+            using var searcher = new ManagementObjectSearcher($"SELECT * FROM Win32_PnPEntity"); //  WHERE Caption LIKE '%{_searchKeyword}%'
 
             foreach (var service in searcher.Get())
             {
+                var pnpClass = service["PNPClass"]?.ToString() ?? string.Empty;
+
+                if (string.IsNullOrEmpty(pnpClass))
+                    continue;
+                if (!_pnpClasses.Any(c => string.Compare(c, pnpClass, true) == 0))
+                    continue;
+
                 var id = service["DeviceID"]?.ToString() ?? service.ToString();
-                var name = service["Name"]?.ToString() ?? service["Caption"]?.ToString() ?? "Generic USB camera";
+                var name = service["Name"]?.ToString() ?? "Unknown USB device";
                 var description = service["Description"]?.ToString();
                 var manufacturer = service["Manufacturer"]?.ToString();
-                cameras.Add(new UsbCamera(id, name, description, manufacturer));
+                devices.Add(new UsbDevice(id, name, description, manufacturer));
             }
         }
         catch (Exception ex)
@@ -153,17 +151,17 @@ public class UsbService : IDisposable
             System.Diagnostics.Debug.WriteLine($"USB ERROR: {ex.Message}");
         }
 
-        _cachedCameras.Clear();
+        _cachedDevices.Clear();
         
-        foreach (var camera in cameras)
+        foreach (var device in devices)
         {
-            _cachedCameras.Add(camera);
+            _cachedDevices.Add(device);
         }
 
-        return cameras.ToArray();
+        return devices.ToArray();
     }
 
-    private static UsbCamera? CreateCamera(PropertyDataCollection props, string? deviceName = null)
+    private UsbDevice? CreateDevice(PropertyDataCollection props, string? deviceName = null)
     {
         string? deviceID = null;
         string? descrition = null;
@@ -171,7 +169,7 @@ public class UsbService : IDisposable
 
         foreach (PropertyData property in props)
         {
-            if (property.Name == "DeviceID")        // next 3 properties handle Win32_SerialPort
+            if (property.Name == "DeviceID")
             {
                 deviceID = (string?)property.Value;
             }
@@ -183,25 +181,30 @@ public class UsbService : IDisposable
             {
                 manufacturer = (string?)property.Value;
             }
-            else if (property.Name == "Dependent")  // this handles Win32_USBControllerDevice, as Win32_SerialPort stopped working
+            else if (property.Name == "Dependent")  // this handles Win32_USBControllerDevice
             {
                 var usbControllerID = (string)property.Value;
                 usbControllerID = usbControllerID.Replace("\"", "");
                 var devID = usbControllerID.Split('=')[1];
                 using var searcher = new ManagementObjectSearcher($"SELECT * FROM Win32_PnPEntity WHERE DeviceID LIKE '%{devID}%'");
                 ManagementBaseObject[] records = searcher.Get().Cast<ManagementBaseObject>().ToArray();
+
                 foreach (var rec in records)
                 {
+                    var pnpClass = (string?)rec.Properties["PNPClass"]?.Value;
+
+                    if (string.IsNullOrEmpty(pnpClass))
+                        continue;
+                    if (!_pnpClasses.Any(c => string.Compare(c, pnpClass, true) == 0))
+                        continue;
+
                     var name = (string?)rec.Properties["Name"]?.Value;
-                    if (name?.ToLower().Contains("camera") ?? false)
-                    {
-                        return CreateCamera(rec.Properties, name);
-                    }
+                    return CreateDevice(rec.Properties, name);
                 }
             }
         }
 
-        return deviceID == null ? null : new UsbCamera(deviceID, deviceName ?? "USB camera", descrition, manufacturer);
+        return deviceID == null ? null : new UsbDevice(deviceID, deviceName ?? "Unknown USB device", descrition, manufacturer);
     }
 
     private static string? GetDeviceID(PropertyDataCollection props)
@@ -214,7 +217,7 @@ public class UsbService : IDisposable
             {
                 deviceID = (string?)property.Value;
             }
-            else if (property.Name == "Dependent")  // this handles Win32_USBControllerDevice, as Win32_SerialPort stopped working
+            else if (property.Name == "Dependent")
             {
                 var usbControllerID = (string)property.Value;
                 usbControllerID = usbControllerID.Replace("\"", "").Replace(@"\\", @"\");
@@ -225,16 +228,16 @@ public class UsbService : IDisposable
         return deviceID;
     }
 
-    // Debugging
     /*
-    static HashSet<string> PropsToPrint = new() { "Caption", "Description", "Manufacturer", "Name", "Service" };
-    static HashSet<string> ManufacturersToPrint = new() { "microsoft" };
-    static HashSet<string> ManufacturersNotToPrint = new() { "microsoft", "standard", "(standard", "intel", "acer", "rivet", "nvidia", "realtek", "generic" };
+    // Debugging
+    static HashSet<string> PropsToPrint = ["Caption", "Description", "Manufacturer", "Name", "Service"];
+    static HashSet<string> ManufacturersToPrint = ["microsoft"];
+    static HashSet<string> ManufacturersNotToPrint = ["microsoft", "standard", "(standard", "intel", "acer", "rivet", "nvidia", "realtek", "generic"];
 
     static void PrintProperties(PropertyDataCollection props)
     {
         var indent = "    ";
-        var man = props["Manufacturer"];
+        //var man = props["Manufacturer"];
         //if (ManufacturersNotToPrint.Any(m => man?.Value?.ToString()?.ToLower().StartsWith(m) ?? false))
         //    return;
         //if (!ManufacturersToPrint.Any(m => man?.Value?.ToString()?.ToLower().StartsWith(m) ?? false))
@@ -246,32 +249,32 @@ public class UsbService : IDisposable
             //    continue;
             if (p.IsArray)
             {
-                ScreenLogger.Print($"{indent}{p.Name}: ({p.Type})");
+                System.Diagnostics.Debug.WriteLine($"{indent}{p.Name}: ({p.Type})");
                 if (p.Value != null)
                 {
                     if (p.Value is string[] strings)
-                        ScreenLogger.Print($"{indent}{indent}{string.Join($"\n{indent}{indent}", strings)}");
+                        System.Diagnostics.Debug.WriteLine($"{indent}{indent}{string.Join($"\n{indent}{indent}", strings)}");
                     else if (p.Value is ushort[] words)
-                        ScreenLogger.Print($"{indent}{indent}{string.Join($"\n{indent}{indent}", words)}");
+                        System.Diagnostics.Debug.WriteLine($"{indent}{indent}{string.Join($"\n{indent}{indent}", words)}");
                     else if (p.Value is uint[] dwords)
-                        ScreenLogger.Print($"{indent}{indent}{string.Join($"\n{indent}{indent}", dwords)}");
+                        System.Diagnostics.Debug.WriteLine($"{indent}{indent}{string.Join($"\n{indent}{indent}", dwords)}");
                     else if (p.Value is ulong[] qwords)
-                        ScreenLogger.Print($"{indent}{indent}{string.Join($"\n{indent}{indent}", qwords)}");
+                        System.Diagnostics.Debug.WriteLine($"{indent}{indent}{string.Join($"\n{indent}{indent}", qwords)}");
                     else
-                        ScreenLogger.Print($"{indent}{indent}{string.Join($"\n{indent}{indent}", (IEnumerable)p.Value)}");
+                        System.Diagnostics.Debug.WriteLine($"{indent}{indent}{string.Join($"\n{indent}{indent}", (IEnumerable)p.Value)}");
                 }
                 else
                 {
-                    ScreenLogger.Print($"{indent}{indent}none");
+                    System.Diagnostics.Debug.WriteLine($"{indent}{indent}none");
                 }
             }
             else
             {
-                ScreenLogger.Print($"{indent}{p.Name} = {p.Value?.ToString()} ({p.Type})");
+                System.Diagnostics.Debug.WriteLine($"{indent}{p.Name} = {p.Value?.ToString()} ({p.Type})");
             }
         }
-        ScreenLogger.Print();
-    }*/
+        System.Diagnostics.Debug.WriteLine("");
+    }
 
     /*
     static COMUtils()

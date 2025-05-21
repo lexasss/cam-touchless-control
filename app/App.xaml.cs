@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace HandTracker;
+namespace CameraTouchlessControl;
 
 public partial class App : Application, IDisposable
 {

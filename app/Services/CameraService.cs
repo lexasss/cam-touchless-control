@@ -1,7 +1,7 @@
-﻿using GitHub.secile.Video;
+﻿using OpenCvSharp;
 using System.Windows.Media.Imaging;
 
-namespace HandTracker;
+namespace CameraTouchlessControl;
 
 internal class CameraService : IDisposable
 {
@@ -9,66 +9,53 @@ internal class CameraService : IDisposable
 
     public event EventHandler<CameraListLocation>? CameraAdded;
     public event EventHandler<string>? CameraRemoved;
-    public event EventHandler<BitmapSource>? Frame;
+    public event EventHandler<Mat>? Frame;
 
     public CameraService()
     {
-        _usbService.Inserted += CameraService_CameraInserted;
-        _usbService.Removed += CameraService_CameraRemoved;
-
-        _canUpdateCameraList = true;
+        _usbService.Inserted += UsbService_DeviceInserted;
+        _usbService.Removed += UsbService_DeviceRemoved;
     }
 
     public void Dispose()
     {
-        CloseCurrentVideoSource();
+        ShutdownCapture();
         GC.SuppressFinalize(this);
     }
 
-    public void UpdateCameralist()
+    public async Task UpdateCameralist()
     {
         _cameras.Clear();
 
-        var videoDevices = UsbCamera.FindDevices();
-        AddMissingCameras(videoDevices);
+        await Task.Run(() =>
+        {
+            var cameras = CameraDeviceEnumerator.Get();
+            AddMissingCameras(cameras);
+        });
     }
 
     public bool Open(string name)
     {
-        CloseCurrentVideoSource();
-
-        if (_cameras.Count == 0)
-            UpdateCameralist();
+        ShutdownCapture();
 
         var camera = _cameras.FirstOrDefault(c => c.Name == name);
         if (camera == null)
             return false;
 
-        int index = _cameras.IndexOf(camera);
-
-        var reasonableFormats = camera.Formats.Where(f => f.Fps >= 15 && f.Size.Width >= 640);
-        if (reasonableFormats.Count() == 0)
-            return false;
-
-        var maxFrameWidth = reasonableFormats.Max(f => f.Size.Width);
-
-        var format = camera.Formats.FirstOrDefault(f => f.Size.Width == maxFrameWidth);
-        if (format == null)
-            return false;
+        int cameraIndex = _cameras.IndexOf(camera);
 
         try
         {
-            _camera = new(index, format)
+            _capture = new VideoCapture(cameraIndex);
+            if (!_capture.IsOpened())
             {
-                PreviewCaptured = (bitmapSource) => Frame?.Invoke(this, bitmapSource)
-            };
-
-            _camera.Start();
-
-            while (!_camera.IsReady)
-            {
-                Task.Delay(20);
+                _capture.Release();
+                _capture = null;
+                return false;
             }
+
+            _isBreakRequested = false;
+            Task.Run(ProcessFrames);
         }
         catch (Exception err)
         {
@@ -79,92 +66,63 @@ internal class CameraService : IDisposable
         return true;
     }
 
-    public void CloseCurrentVideoSource()
+    public void ShutdownCapture()
     {
-        if (_camera != null)
+        if (_capture != null)
         {
-            try
+            _isBreakRequested = true;
+
+            lock (_capture)
             {
-                _camera.Stop();
-                _camera.Release();
-            }
-            finally
-            {
-                _camera = null;
+                _capture?.Release();
+                _capture = null;
             }
         }
     }
 
     // Internal
 
-    record class CameraDescriptor(string Name, UsbCamera.VideoFormat[] Formats);
+    readonly UsbService _usbService = new(["Image", "Camera"]);
+    readonly List<Camera> _cameras = [];
 
-    readonly UsbService _usbService = new();
+    //Camera? _camera = null;
+    VideoCapture? _capture;
+    bool _isBreakRequested = false;
 
-    UsbCamera? _camera = null;
-    List<CameraDescriptor> _cameras = [];
-    bool _canUpdateCameraList = false;
-
-    private void AddMissingCameras(string[] videoDevices)
+    private void AddMissingCameras(Camera[] cameras)
     {
-        for (int i = 0; i < videoDevices.Length; i++)
+        for (int i = 0; i < cameras.Length; i++)
         {
-            var name = videoDevices[i];
-            if (_cameras.FirstOrDefault(c => c.Name == name) == null)
+            var camera = cameras[i];
+            if (_cameras.FirstOrDefault(c => c.Name == camera.Name) == null)
             {
-                //System.Diagnostics.Debug.WriteLine(name);
-
-                UsbCamera.VideoFormat[] formats = UsbCamera.GetVideoFormat(i);
-
-                //for (int j = 0; j < formats.Length; j++)
-                //    System.Diagnostics.Debug.WriteLine($"  {j}: {formats[j]}");
-
-                if (formats.Length > 0)
-                {
-                    _cameras.Insert(i, new CameraDescriptor(name, formats));
-                    CameraAdded?.Invoke(this, new CameraListLocation(name, i));
-                }
+                _cameras.Insert(i, camera);
+                CameraAdded?.Invoke(this, new CameraListLocation(camera.Name, i));
             }
         }
     }
 
-    private void CameraService_CameraInserted(object? sender, UsbService.UsbCamera camera)
+    private void UsbService_DeviceInserted(object? sender, UsbService.UsbDevice camera)
     {
-        if (!_canUpdateCameraList)
-        {
-            System.Diagnostics.Debug.WriteLine(camera.Name);
-            return;
-        }
-
         System.Diagnostics.Debug.WriteLine($"Inserted: {camera.Name}");
 
         Task.Run(async () =>
         {
-            int maxWaitInterval = 5000;
-            var videoDevices = UsbCamera.FindDevices();
+            await Task.Delay(2000); // 2 seconds if waiting because same value uses the UsbService listener to update its state
 
-            while (maxWaitInterval > 0 && videoDevices.Length <= _cameras.Count)
-            {
-                _ = Task.Delay(500);
-                maxWaitInterval -= 500;
-                videoDevices = UsbCamera.FindDevices();
-            }
-
-            AddMissingCameras(videoDevices);
+            Camera[] cameras = CameraDeviceEnumerator.Get();
+            AddMissingCameras(cameras);
         });
     }
 
-    private void CameraService_CameraRemoved(object? sender, UsbService.UsbCamera camera)
+    private void UsbService_DeviceRemoved(object? sender, UsbService.UsbDevice camera)
     {
-        if (!_canUpdateCameraList)
-            return;
-
         System.Diagnostics.Debug.WriteLine($"Removed: {camera.Name}");
 
-        var videoDevices = UsbCamera.FindDevices();
+        Camera[] cameras = CameraDeviceEnumerator.Get();
 
-        Dictionary<CameraDescriptor, bool> checkedCameras = _cameras
-            .Select(cam => new KeyValuePair<CameraDescriptor, bool>(cam, videoDevices.Contains(cam.Name)))
+        Dictionary<Camera, bool> checkedCameras = _cameras
+            .Select(cam => new KeyValuePair<Camera, bool>(cam, cameras.Any(c => c.Name == cam.Name)))
             .ToDictionary();
 
         var missingCameras = checkedCameras.Where(kv => !kv.Value);
@@ -173,5 +131,27 @@ internal class CameraService : IDisposable
             _cameras.Remove(missingCamera.Key);
             CameraRemoved?.Invoke(this, missingCamera.Key.Name);
         }
+    }
+
+    private void ProcessFrames()
+    {
+        var frame = new Mat();
+
+        while (!_isBreakRequested && _capture != null)
+        {
+            lock (_capture)
+            {
+                _capture.Read(frame);
+            }
+
+            if (frame.Empty())
+                break;
+
+            Frame?.Invoke(this, frame);
+
+            Cv2.WaitKey(30);
+        }
+
+        ShutdownCapture();
     }
 }

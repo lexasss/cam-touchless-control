@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using System.Windows.Data;
 
-namespace HandTracker.Converters;
+namespace CameraTouchlessControl.Converters;
 
 internal class Negate :  IValueConverter
 {

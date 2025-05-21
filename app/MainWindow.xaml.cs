@@ -1,7 +1,7 @@
 ﻿using Leap;
 using System.Windows;
 
-namespace HandTracker;
+namespace CameraTouchlessControl;
 
 public partial class MainWindow : Window
 {

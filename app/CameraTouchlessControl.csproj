@@ -11,13 +11,16 @@
 
   <ItemGroup>
     <PackageReference Include="MaterialDesignThemes" Version="5.2.1" />
+    <PackageReference Include="OpenCvSharp4.Windows" Version="4.11.0.20250507" />
+    <PackageReference Include="OpenCvSharp4.WpfExtensions" Version="4.11.0.20250507" />
     <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="LeapMotion.Net">
-      <HintPath>..\LeapMotion.Net\bin\Release\net8.0\LeapMotion.Net.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\LeapMotion.Net\LeapMotion.Net.csproj" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy &quot;$(SolutionDir)libs\LeapC.dll&quot; &quot;$(TargetDir)&quot; /Y /I" />
+  </Target>
 </Project>

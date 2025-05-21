@@ -1,6 +1,6 @@
 ﻿using Leap;
 
-namespace HandTracker;
+namespace CameraTouchlessControl;
 
 public class HandLocation(ref readonly Vector palm, ref readonly Vector thumb, ref readonly Vector index, ref readonly Vector middle)
 {
