@@ -11,11 +11,12 @@
 
   <ItemGroup>
     <PackageReference Include="MaterialDesignThemes" Version="5.2.1" />
+    <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="LeapMotion.Net">
-      <HintPath>..\..\LeapMotion.Net\bin\Release\net8.0\LeapMotion.Net.dll</HintPath>
+      <HintPath>..\LeapMotion.Net\bin\Release\net8.0\LeapMotion.Net.dll</HintPath>
     </Reference>
   </ItemGroup>
 

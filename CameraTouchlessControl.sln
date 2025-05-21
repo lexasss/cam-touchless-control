@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35931.197 d17.13
+VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HandTracker", "HandTracker\HandTracker.csproj", "{C48B756D-38F4-450E-B038-14B80C043D4F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CameraTouchlessControl", "app\CameraTouchlessControl.csproj", "{C48B756D-38F4-450E-B038-14B80C043D4F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

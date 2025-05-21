@@ -9,12 +9,12 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        var imageSource = new ImageSource();
+        var cameraService = new CameraService();
 
-        if (((App)Application.Current).LeapMotion is LeapMotion lm)
+        if (((App)Application.Current).LeapMotion is LeapMotion handTrackingService)
         {
-            _viewModel = new MainViewModel(lm, imageSource, Dispatcher);
-            CommandBindings.Add(new Commands.ToggleDevice(_viewModel).Binding);
+            _viewModel = new MainViewModel(handTrackingService, cameraService, Dispatcher);
+            CommandBindings.Add(new Commands.ToggleHandTracker(_viewModel).Binding);
             CommandBindings.Add(new Commands.ToggleCamera(_viewModel).Binding);
 
             DataContext = _viewModel;
@@ -22,7 +22,7 @@ public partial class MainWindow : Window
 
         Application.Current.Exit += (s, e) =>
         {
-            imageSource.Dispose();
+            cameraService.Dispose();
         };
     }
 

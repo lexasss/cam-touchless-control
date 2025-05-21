@@ -13,7 +13,6 @@
 
     <Window.Resources>
         <conv:Negate x:Key="negate"/>
-        <BooleanToVisibilityConverter x:Key="bool2vis"/>
     </Window.Resources>
     
     <Grid>
@@ -22,7 +21,7 @@
             <StackPanel.Style>
                 <Style TargetType="StackPanel">
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding HasDevices}" Value="True">
+                        <DataTrigger Binding="{Binding HasHandTrackers}" Value="True">
                             <Setter Property="Visibility" Value="Collapsed" />
                         </DataTrigger>
                     </Style.Triggers>
@@ -46,7 +45,7 @@
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsReady}" Value="False">
+                            <DataTrigger Binding="{Binding IsHandTrackerReady}" Value="False">
                                 <Setter Property="Visibility" Value="Visible"/>
                             </DataTrigger>
                         </Style.Triggers>
@@ -62,7 +61,7 @@
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasDevices}" Value="True">
+                            <DataTrigger Binding="{Binding HasHandTrackers}" Value="True">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
                         </Style.Triggers>
@@ -75,7 +74,7 @@
             <Grid.Style>
                 <Style TargetType="Grid">
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsReady}" Value="False">
+                        <DataTrigger Binding="{Binding IsHandTrackerReady}" Value="False">
                             <Setter Property="Visibility" Value="Collapsed" />
                         </DataTrigger>
                     </Style.Triggers>
@@ -98,11 +97,11 @@
                 <ComboBox MinWidth="160"
                           Margin="12,0"
                           IsEnabled="{Binding ElementName=tbnToggleTrackingDevice, Path=IsChecked, Converter={StaticResource negate}}"
-                          ItemsSource="{Binding Devices}"
-                          SelectedItem="{Binding SelectedDevice}"/>
+                          ItemsSource="{Binding HandTrackers}"
+                          SelectedItem="{Binding SelectedHandTracker}"/>
                 <ToggleButton Name="tbnToggleTrackingDevice"
-                              IsEnabled="{Binding HasSelectedDevice}"
-                              Command="{x:Static commands:ToggleDevice.Instance}" />
+                              IsEnabled="{Binding HasSelectedHandTracker}"
+                              Command="{x:Static commands:ToggleHandTracker.Instance}" />
             </WrapPanel>
 
             <WrapPanel Grid.Row="0" Grid.Column="1"
@@ -124,14 +123,14 @@
                 <Grid.Style>
                     <Style TargetType="Grid">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsCapturing}" Value="False">
+                            <DataTrigger Binding="{Binding IsCameraCapturing}" Value="False">
                                 <Setter Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Grid.Style>
                 <Image Margin="12"
-                   Source="{Binding ImageSource}"/>
+                   Source="{Binding CameraFrame}"/>
             </Grid>
         </Grid>
     </Grid>

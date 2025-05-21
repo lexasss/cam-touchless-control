@@ -23,7 +23,7 @@ internal class ToggleCamera
 
     private void ToggleCameraCmdExecuted(object sender, ExecutedRoutedEventArgs e)
     {
-        _vm.IsCapturing = !_vm.IsCapturing;
+        _vm.IsCameraCapturing = !_vm.IsCameraCapturing;
     }
 
     private void ToggleCameraCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
