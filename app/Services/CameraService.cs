@@ -1,14 +1,11 @@
 ﻿using OpenCvSharp;
-using System.Windows.Media.Imaging;
 
 namespace CameraTouchlessControl;
 
 internal class CameraService : IDisposable
 {
-    public record CameraListLocation(string Name, int Location);
-
-    public event EventHandler<CameraListLocation>? CameraAdded;
-    public event EventHandler<string>? CameraRemoved;
+    public event EventHandler<Camera>? CameraAdded;
+    public event EventHandler<Camera>? CameraRemoved;
     public event EventHandler<Mat>? Frame;
 
     public CameraService()
@@ -34,13 +31,9 @@ internal class CameraService : IDisposable
         });
     }
 
-    public bool Open(string name)
+    public bool Open(Camera camera)
     {
         ShutdownCapture();
-
-        var camera = _cameras.FirstOrDefault(c => c.Name == name);
-        if (camera == null)
-            return false;
 
         int cameraIndex = _cameras.IndexOf(camera);
 
@@ -97,7 +90,7 @@ internal class CameraService : IDisposable
             if (_cameras.FirstOrDefault(c => c.Name == camera.Name) == null)
             {
                 _cameras.Insert(i, camera);
-                CameraAdded?.Invoke(this, new CameraListLocation(camera.Name, i));
+                CameraAdded?.Invoke(this, camera);
             }
         }
     }
@@ -129,7 +122,7 @@ internal class CameraService : IDisposable
         foreach (var missingCamera in missingCameras)
         {
             _cameras.Remove(missingCamera.Key);
-            CameraRemoved?.Invoke(this, missingCamera.Key.Name);
+            CameraRemoved?.Invoke(this, missingCamera.Key);
         }
     }
 

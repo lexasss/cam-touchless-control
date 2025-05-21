@@ -93,21 +93,26 @@ internal class MainViewModel : INotifyPropertyChanged
             {
                 if (SelectedCamera != null)
                 {
-                    field = _cameraService.Open(SelectedCamera);
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsCameraCapturing)));
+                    if (!_cameraService.Open(SelectedCamera))
+                    {
+                        Task.Run(async () => {
+                            await Task.Delay(500);
+                            _dispatcher.Invoke(() => IsCameraCapturing = false);
+                        });
+                    }
                 }
             }
             else
             {
                 _cameraService.ShutdownCapture();
                 CameraFrame = null;
-
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsCameraCapturing)));
             }
+
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsCameraCapturing)));
         }
     } = false;
 
-    public string? SelectedCamera
+    public Camera? SelectedCamera
     {
         get => field;
         set
@@ -141,7 +146,7 @@ internal class MainViewModel : INotifyPropertyChanged
 
     public ObservableCollection<LeapMotionDevice> HandTrackers { get; } = [];
 
-    public ObservableCollection<string> Cameras { get; } = [];
+    public ObservableCollection<Camera> Cameras { get; } = [];
 
     /// <summary>
     /// Maximum distance for the hand to be tracked, in cm
@@ -163,20 +168,9 @@ internal class MainViewModel : INotifyPropertyChanged
         _cameraService = cameraService;
         _dispatcher = dispatcher;
 
-        _cameraService.CameraAdded += (s, e) => _dispatcher.Invoke(() =>
-        {
-            Cameras.Insert(e.Location, e.Name);
-            EnsureSomeCameraIsSelected();
-        });
-        _cameraService.CameraRemoved += (s, e) => _dispatcher.Invoke(() =>
-        {
-            Cameras.Remove(e);
-            EnsureSomeCameraIsSelected();
-        });
-        _cameraService.Frame += (s, e) => _dispatcher.Invoke(() =>
-        {
-            if (IsCameraCapturing) CameraFrame = e.ToBitmapSource();
-        });
+        _cameraService.CameraAdded += CameraService_CameraAdded;
+        _cameraService.CameraRemoved += CameraService_CameraRemoved;
+        _cameraService.Frame += CameraService_FrameReceived;
 
         Task.Run(async () =>
         {
@@ -261,6 +255,41 @@ internal class MainViewModel : INotifyPropertyChanged
         _handTrackingService?.StopConnection();
         IsHandTrackerConnected = false;
     }
+
+    #region Camera events
+
+    private void CameraService_FrameReceived(object? sender, OpenCvSharp.Mat e)
+    {
+        _dispatcher.Invoke(() =>
+        {
+            if (IsCameraCapturing) CameraFrame = e.ToBitmapSource();
+        });
+    }
+
+    private void CameraService_CameraRemoved(object? sender, Camera e)
+    {
+        _dispatcher.Invoke(() =>
+        {
+            if (SelectedCamera == e && IsCameraCapturing)
+            {
+                IsCameraCapturing = false;
+            }
+
+            Cameras.Remove(e);
+            EnsureSomeCameraIsSelected();
+        });
+    }
+
+    private void CameraService_CameraAdded(object? sender, Camera e)
+    {
+        _dispatcher.Invoke(() =>
+        {
+            Cameras.Add(e);
+            EnsureSomeCameraIsSelected();
+        });
+    }
+
+    #endregion
 
     #region LM events
 

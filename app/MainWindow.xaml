@@ -115,6 +115,7 @@
                           SelectedItem="{Binding SelectedCamera}"/>
                 <ToggleButton Name="tbnToggleCamera"
                               IsEnabled="{Binding HasSelectedCamera}"
+                              IsChecked="{Binding IsCameraCapturing, Mode=OneWay}"
                               Command="{x:Static commands:ToggleCamera.Instance}" />
             </WrapPanel>
 
