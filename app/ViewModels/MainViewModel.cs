@@ -40,9 +40,13 @@ internal class MainViewModel : INotifyPropertyChanged
 
             field = value;
             if (value)
-                Run();
+            {
+                StartHandTracking();
+            }
             else
-                Stop();
+            {
+                StopHandTracking();
+            }
 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsHandTrackingRunning)));
         }
@@ -184,11 +188,12 @@ internal class MainViewModel : INotifyPropertyChanged
 
             _handTrackingService.Connect += Lm_Connect;
             _handTrackingService.Disconnect += Lm_Disconnect;
-            _handTrackingService.FrameReady += Lm_FrameReady;
 
             _handTrackingService.Device += Lm_Device;
             _handTrackingService.DeviceLost += Lm_DeviceLost;
             _handTrackingService.DeviceFailure += Lm_DeviceFailure;
+
+            _handTrackingService.FrameReady += Lm_FrameReady;
 
             // Ask for frames even in the background - this is important!
             _handTrackingService.SetPolicy(LeapMotion.PolicyFlag.POLICY_BACKGROUND_FRAMES);
@@ -229,7 +234,7 @@ internal class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private void Run()
+    private void StartHandTracking()
     {
         if (_handTrackingService == null || IsHandTrackerConnected)
             return;
@@ -250,10 +255,9 @@ internal class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private void Stop()
+    private void StopHandTracking()
     {
-        _handTrackingService?.StopConnection();
-        IsHandTrackerConnected = false;
+        IsHandTrackingRunning = false;
     }
 
     #region Camera events
@@ -311,7 +315,7 @@ internal class MainViewModel : INotifyPropertyChanged
             {
                 if (IsHandTrackingRunning)
                 {
-                    Stop();
+                    StopHandTracking();
                 }
 
                 HandTrackers.Remove(device);
@@ -351,9 +355,6 @@ internal class MainViewModel : INotifyPropertyChanged
     {
         if (!IsHandTrackingRunning)
             return;
-
-        if (!IsHandTrackerConnected)
-            IsHandTrackerConnected = true;
 
         bool handDetected = false;
 

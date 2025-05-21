@@ -101,6 +101,7 @@
                           SelectedItem="{Binding SelectedHandTracker}"/>
                 <ToggleButton Name="tbnToggleTrackingDevice"
                               IsEnabled="{Binding HasSelectedHandTracker}"
+                              IsChecked="{Binding IsHandTrackingRunning, Mode=OneWay}"
                               Command="{x:Static commands:ToggleHandTracker.Instance}" />
             </WrapPanel>
 
