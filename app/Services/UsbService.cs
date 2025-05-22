@@ -1,6 +1,4 @@
-﻿using Leap;
-using System.Collections;
-using System.Management;
+﻿using System.Management;
 
 namespace CameraTouchlessControl;
 
@@ -10,17 +8,6 @@ namespace CameraTouchlessControl;
 /// </summary>
 public class UsbService : IDisposable
 {
-    /// <summary>
-    /// Device descriptor
-    /// </summary>
-    public class UsbDevice(string id, string name, string? description, string? manufacturer)
-    {
-        public string ID { get; } = id;
-        public string Name { get; } = name;
-        public string? Description { get; } = description;
-        public string? Manufacturer { get; } = manufacturer;
-    }
-
     /// <summary>
     /// Fires when a USB device becomes available
     /// </summary>
@@ -34,11 +21,11 @@ public class UsbService : IDisposable
     /// <summary>
     /// List of all USB devices connected to the system
     /// </summary>
-    public UsbDevice[] Devices => GetAvailableDevices();
+    public UsbDevice[] Devices => _cachedDevices.ToArray();
 
-    public UsbService(string[] pnpClasses)
+    public UsbService(UsbFilter[] filters)
     {
-        _pnpClasses = pnpClasses;
+        _filters = filters;
 
         Listen("__InstanceCreationEvent", "Win32_USBControllerDevice", ActionType.Inserted);
         Listen("__InstanceDeletionEvent", "Win32_USBControllerDevice", ActionType.Removed);
@@ -68,7 +55,7 @@ public class UsbService : IDisposable
 
     readonly List<UsbDevice> _cachedDevices = [];
     readonly List<ManagementEventWatcher> _watchers = [];
-    readonly string[] _pnpClasses;
+    readonly UsbFilter[] _filters;
 
     private void Listen(string source, string target, ActionType actionType)
     {
@@ -130,19 +117,24 @@ public class UsbService : IDisposable
         {
             using var searcher = new ManagementObjectSearcher($"SELECT * FROM Win32_PnPEntity"); //  WHERE Caption LIKE '%{_searchKeyword}%'
 
-            foreach (var service in searcher.Get())
+            foreach (var device in searcher.Get())
             {
-                var pnpClass = service["PNPClass"]?.ToString() ?? string.Empty;
+                if (!_filters.All(filter => filter.IsMatching(device)))
+                    continue;
+
+                /*
+                var pnpClass = device["PNPClass"]?.ToString() ?? string.Empty;
 
                 if (string.IsNullOrEmpty(pnpClass))
                     continue;
                 if (!_pnpClasses.Any(c => string.Compare(c, pnpClass, true) == 0))
                     continue;
+                */
 
-                var id = service["DeviceID"]?.ToString() ?? service.ToString();
-                var name = service["Name"]?.ToString() ?? "Unknown USB device";
-                var description = service["Description"]?.ToString();
-                var manufacturer = service["Manufacturer"]?.ToString();
+                var id = device["DeviceID"]?.ToString() ?? device.ToString();
+                var name = device["Name"]?.ToString() ?? "Unknown USB device";
+                var description = device["Description"]?.ToString();
+                var manufacturer = device["Manufacturer"]?.ToString();
                 devices.Add(new UsbDevice(id, name, description, manufacturer));
             }
         }
@@ -152,11 +144,7 @@ public class UsbService : IDisposable
         }
 
         _cachedDevices.Clear();
-        
-        foreach (var device in devices)
-        {
-            _cachedDevices.Add(device);
-        }
+        _cachedDevices.AddRange(devices);
 
         return devices.ToArray();
     }
@@ -191,12 +179,17 @@ public class UsbService : IDisposable
 
                 foreach (var rec in records)
                 {
+                    if (!_filters.All(filter => filter.IsMatching(rec)))
+                        continue;
+
+                    /*
                     var pnpClass = (string?)rec.Properties["PNPClass"]?.Value;
 
                     if (string.IsNullOrEmpty(pnpClass))
                         continue;
                     if (!_pnpClasses.Any(c => string.Compare(c, pnpClass, true) == 0))
                         continue;
+                    */
 
                     var name = (string?)rec.Properties["Name"]?.Value;
                     return CreateDevice(rec.Properties, name);
@@ -275,15 +268,5 @@ public class UsbService : IDisposable
         }
         System.Diagnostics.Debug.WriteLine("");
     }
-
-    /*
-    static COMUtils()
-    {
-        ScreenLogger.Print("==== PnP devices ===");
-        using var pnp = new ManagementObjectSearcher("SELECT * FROM Win32_PnPEntity WHERE Caption LIKE '%(COM%' OR Caption LIKE '%Smellodi%'");
-        var records = pnp.Get().Cast<ManagementBaseObject>().ToArray();
-        foreach (var rec in records)
-            PrintProperties(rec.Properties);
-        ScreenLogger.Print("====================");
-    }*/
+    */
 }

@@ -10,6 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="App.xaml.cs~RF4c71919.TMP" />
+    <None Remove="Models\DShowCamera.cs~RF600a8e3.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MaterialDesignThemes" Version="5.2.1" />
     <PackageReference Include="OpenCvSharp4.Windows" Version="4.11.0.20250507" />
     <PackageReference Include="OpenCvSharp4.WpfExtensions" Version="4.11.0.20250507" />

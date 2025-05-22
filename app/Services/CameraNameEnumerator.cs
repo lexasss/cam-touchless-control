@@ -5,11 +5,11 @@ namespace CameraTouchlessControl;
 
 public static class CameraNameEnumerator
 {
-    public static string[] Get()
+    public static UsbDevice[] Get()
     {
         IMoniker[] moniker = new IMoniker[100];
         object? bagObj = null;
-        List<string> result = [];
+        List<UsbDevice> result = [];
 
         try
         {
@@ -32,13 +32,18 @@ public static class CameraNameEnumerator
                 // get property bag of the moniker
                 moniker[0].BindToStorage(null, null, ref bagId, out bagObj);
                 var bag = (IPropertyBag)bagObj;
-                // read FriendlyName
-                object val = "";
-                bag.Read("FriendlyName", ref val, nint.Zero);
-                //list in box
-                result.Add((string)val);
-            }
 
+                object name = "";
+                bag.Read("FriendlyName", ref name, nint.Zero);
+                object description = "";
+                bag.Read("Description", ref description, nint.Zero);
+                object devicePath = "";
+                bag.Read("DevicePath", ref devicePath, nint.Zero);
+                object manufacturer = "";
+                bag.Read("Manufacturer", ref manufacturer, nint.Zero);
+
+                result.Add(new UsbDevice((string)devicePath,  (string)name, (string)description, (string)manufacturer));
+            }
         }
         finally
         {

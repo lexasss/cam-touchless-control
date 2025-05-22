@@ -9,27 +9,17 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        try
-        { 
-            var handTrackingService = new LeapMotion();
-            var cameraService = new CameraService();
+        var app = (App)Application.Current;
 
-            _viewModel = new MainViewModel(handTrackingService, cameraService, Dispatcher);
-            CommandBindings.Add(new Commands.ToggleHandTracker(_viewModel).Binding);
-            CommandBindings.Add(new Commands.ToggleCamera(_viewModel).Binding);
+        _viewModel = new MainViewModel(
+            app.HandTrackingService,
+            app.CameraService,
+            Dispatcher);
 
-            DataContext = _viewModel;
+        CommandBindings.Add(new Commands.ToggleHandTracker(_viewModel).Binding);
+        CommandBindings.Add(new Commands.ToggleCamera(_viewModel).Binding);
 
-            Application.Current.Exit += (s, e) =>
-            {
-                cameraService.Dispose();
-                handTrackingService?.Dispose();
-            };
-        }
-        catch (Exception e)
-        {
-            System.Diagnostics.Debug.WriteLine($"Failed to connect to LeapMotion: {e.Message}");
-        }
+        DataContext = _viewModel;
     }
 
     // Internal

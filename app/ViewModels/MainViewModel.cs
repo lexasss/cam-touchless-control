@@ -2,9 +2,11 @@
 using OpenCvSharp.WpfExtensions;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using System.Windows.Threading;
+
+using Camera = CameraTouchlessControl.UsbDevice;
 
 namespace CameraTouchlessControl;
 
@@ -122,6 +124,19 @@ internal class MainViewModel : INotifyPropertyChanged
         set
         {
             field = value;
+
+            if (field == null)
+            {
+                Task.Run(async () =>
+                {
+                    await Task.Delay(500);
+                    if (SelectedCamera == null)
+                    {
+                        SelectedCamera = Cameras.FirstOrDefault();
+                    }
+                });
+            }
+
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedCamera)));
 
             HasSelectedCamera = value != null;
@@ -174,13 +189,15 @@ internal class MainViewModel : INotifyPropertyChanged
 
         _cameraService.CameraAdded += CameraService_CameraAdded;
         _cameraService.CameraRemoved += CameraService_CameraRemoved;
+        _cameraService.CaptureStopped += CameraService_CaptureStopped; ;
         _cameraService.Frame += CameraService_FrameReceived;
 
-        Task.Run(async () =>
+        foreach (var camera in _cameraService.Cameras)
         {
-            await _cameraService.UpdateCameralist();
-            EnsureSomeCameraIsSelected();
-        });
+            Cameras.Add(camera);
+        }
+
+        EnsureSomeCameraIsSelected();
 
         if (_handTrackingService != null)
         {
@@ -228,9 +245,9 @@ internal class MainViewModel : INotifyPropertyChanged
 
     private void EnsureSomeCameraIsSelected()
     {
-        if (Cameras.Count > 0 && SelectedCamera == null)
+        if (SelectedCamera == null)
         {
-            SelectedCamera = Cameras.First();
+            SelectedCamera = Cameras.FirstOrDefault();
         }
     }
 
@@ -241,7 +258,7 @@ internal class MainViewModel : INotifyPropertyChanged
 
         if (_handTrackingService.Devices.Count == 0)
         {
-            Debug.WriteLine("[LM] Found no devices");
+            System.Diagnostics.Debug.WriteLine("Found no hand tracking devices");
             return;
         }
 
@@ -266,7 +283,8 @@ internal class MainViewModel : INotifyPropertyChanged
     {
         _dispatcher.Invoke(() =>
         {
-            if (IsCameraCapturing) CameraFrame = e.ToBitmapSource();
+            if (IsCameraCapturing)
+                CameraFrame = e.ToBitmapSource();
         });
     }
 
@@ -274,13 +292,13 @@ internal class MainViewModel : INotifyPropertyChanged
     {
         _dispatcher.Invoke(() =>
         {
-            if (SelectedCamera == e && IsCameraCapturing)
+            if (SelectedCamera?.ID == e.ID && IsCameraCapturing)
             {
                 IsCameraCapturing = false;
             }
 
             Cameras.Remove(e);
-            EnsureSomeCameraIsSelected();
+            //EnsureSomeCameraIsSelected();
         });
     }
 
@@ -289,8 +307,13 @@ internal class MainViewModel : INotifyPropertyChanged
         _dispatcher.Invoke(() =>
         {
             Cameras.Add(e);
-            EnsureSomeCameraIsSelected();
+            //EnsureSomeCameraIsSelected();
         });
+    }
+
+    private void CameraService_CaptureStopped(object? sender, EventArgs e)
+    {
+        IsCameraCapturing = false;
     }
 
     #endregion
@@ -301,7 +324,7 @@ internal class MainViewModel : INotifyPropertyChanged
     {
         _dispatcher.Invoke(() =>
         {
-            Debug.WriteLine($"[LM] Device {e.DeviceSerialNumber} failure: {e.ErrorMessage} ({e.ErrorCode})");
+            System.Diagnostics.Debug.WriteLine($"Hand tracking device {e.DeviceSerialNumber} failure: {e.ErrorMessage} ({e.ErrorCode})");
         });
     }
 
@@ -322,7 +345,7 @@ internal class MainViewModel : INotifyPropertyChanged
                 HasHandTrackers = _handTrackingService?.Devices.Count > 0;
             });
 
-            Debug.WriteLine($"[LM] Device {e.Device.SerialNumber} was lost");
+            System.Diagnostics.Debug.WriteLine($"Hand tracking device {e.Device.SerialNumber} was lost");
         }
     }
 
@@ -337,7 +360,7 @@ internal class MainViewModel : INotifyPropertyChanged
                 EnsureSomeHandTrackerIsSelected();
             });
 
-            Debug.WriteLine($"[LM] Found device {e.Device.SerialNumber}");
+            System.Diagnostics.Debug.WriteLine($"Found hand tracking device {e.Device.SerialNumber}");
         }
     }
 

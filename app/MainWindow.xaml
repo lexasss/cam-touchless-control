@@ -16,60 +16,6 @@
     </Window.Resources>
     
     <Grid>
-        <StackPanel Grid.RowSpan="100" Grid.ColumnSpan="100"
-                    VerticalAlignment="Center">
-            <StackPanel.Style>
-                <Style TargetType="StackPanel">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding HasHandTrackers}" Value="True">
-                            <Setter Property="Visibility" Value="Collapsed" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </StackPanel.Style>
-            
-            <TextBlock FontSize="46"
-                   Foreground="#BBBBBB"
-                   HorizontalAlignment="Center"
-                   TextWrapping="Wrap"
-                   Text="Hand tracking is not available">
-            </TextBlock>
-            <Separator Margin="12"
-                       MaxWidth="892"/>
-            <TextBlock FontSize="16"
-                       Foreground="#BBBBBB"
-                       HorizontalAlignment="Center"
-                       TextWrapping="Wrap"
-                       Visibility="Collapsed"
-                       Text="Leap Motion is not installed">
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsHandTrackerReady}" Value="False">
-                                <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBlock.Style>
-            </TextBlock>
-            <TextBlock FontSize="16"
-                       Foreground="#BBBBBB"
-                       HorizontalAlignment="Center"
-                       TextWrapping="Wrap"
-                       Visibility="Visible"
-                       Text="No Leap Motion devices attached">
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasHandTrackers}" Value="True">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBlock.Style>
-            </TextBlock>
-        </StackPanel>
-        
         <Grid>
             <Grid.Style>
                 <Style TargetType="Grid">
@@ -135,5 +81,58 @@
                    Source="{Binding CameraFrame}"/>
             </Grid>
         </Grid>
+        <StackPanel Grid.RowSpan="100" Grid.ColumnSpan="100"
+                    VerticalAlignment="Center">
+            <StackPanel.Style>
+                <Style TargetType="StackPanel">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasHandTrackers}" Value="True">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+
+            <TextBlock FontSize="46"
+                   Foreground="#BBBBBB"
+                   HorizontalAlignment="Center"
+                   TextWrapping="Wrap"
+                   Text="Hand tracking is not available">
+            </TextBlock>
+            <Separator Margin="12"
+                       MaxWidth="892"/>
+            <TextBlock FontSize="16"
+                       Foreground="#BBBBBB"
+                       HorizontalAlignment="Center"
+                       TextWrapping="Wrap"
+                       Visibility="Collapsed"
+                       Text="Leap Motion is not installed">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsHandTrackerReady}" Value="False">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+            <TextBlock FontSize="16"
+                       Foreground="#BBBBBB"
+                       HorizontalAlignment="Center"
+                       TextWrapping="Wrap"
+                       Visibility="Visible"
+                       Text="No Leap Motion devices attached">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasHandTrackers}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </StackPanel>
     </Grid>
 </Window>
