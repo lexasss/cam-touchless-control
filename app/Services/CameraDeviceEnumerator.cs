@@ -10,8 +10,10 @@ public static class CameraDeviceEnumerator
 
         //var frame = new Mat();
 
-        var cameraDevices = CameraNameEnumerator.Get();
+        var cameraDevices = VideoInputEnumerator.Get();
         int cameraDeviceIndex = 0;
+
+        System.Diagnostics.Debug.WriteLine($"==== DSHOW ====");
 
         for (int drv = 0; drv < _drivers.Length; drv++)
         {
@@ -31,12 +33,11 @@ public static class CameraDeviceEnumerator
                     }
 
                     cameras.Add(new DShowCamera((VideoCaptureAPIs)driverEnum, 
-                        driverName, driverEnum + idx, 
+                        driverEnum + idx, 
                         cameraDevice ?? new UsbDevice("", $"{driverName}+{idx}", "", "")));
 
                     //cap.Read(frame);
                     //System.Diagnostics.Debug.WriteLine($"{driverName}+{idx}\t opens: OK \t grabs: " + (frame.Empty() ? "FAIL" : "OK"));
-                    System.Diagnostics.Debug.WriteLine($"{driverName} = {driverEnum + idx}");
                 }
                 cap.Release();
             }

@@ -3,7 +3,6 @@ using OpenCvSharp.WpfExtensions;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Media.Imaging;
-using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 
 using Camera = CameraTouchlessControl.UsbDevice;
@@ -99,13 +98,14 @@ internal class MainViewModel : INotifyPropertyChanged
             {
                 if (SelectedCamera != null)
                 {
-                    if (!_cameraService.Open(SelectedCamera))
-                    {
-                        Task.Run(async () => {
+                    Task.Run(async () => {
+                        bool wasOpened = _cameraService.Open(SelectedCamera);
+                        if (!wasOpened)
+                        {
                             await Task.Delay(500);
                             _dispatcher.Invoke(() => IsCameraCapturing = false);
-                        });
-                    }
+                        }
+                    });
                 }
             }
             else
@@ -124,19 +124,6 @@ internal class MainViewModel : INotifyPropertyChanged
         set
         {
             field = value;
-
-            if (field == null)
-            {
-                Task.Run(async () =>
-                {
-                    await Task.Delay(500);
-                    if (SelectedCamera == null)
-                    {
-                        SelectedCamera = Cameras.FirstOrDefault();
-                    }
-                });
-            }
-
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedCamera)));
 
             HasSelectedCamera = value != null;
@@ -189,7 +176,7 @@ internal class MainViewModel : INotifyPropertyChanged
 
         _cameraService.CameraAdded += CameraService_CameraAdded;
         _cameraService.CameraRemoved += CameraService_CameraRemoved;
-        _cameraService.CaptureStopped += CameraService_CaptureStopped; ;
+        _cameraService.CaptureStopped += CameraService_CaptureStopped;
         _cameraService.Frame += CameraService_FrameReceived;
 
         foreach (var camera in _cameraService.Cameras)
@@ -245,7 +232,7 @@ internal class MainViewModel : INotifyPropertyChanged
 
     private void EnsureSomeCameraIsSelected()
     {
-        if (SelectedCamera == null)
+        if (SelectedCamera == null && Cameras.Count > 0)
         {
             SelectedCamera = Cameras.FirstOrDefault();
         }
@@ -298,7 +285,7 @@ internal class MainViewModel : INotifyPropertyChanged
             }
 
             Cameras.Remove(e);
-            //EnsureSomeCameraIsSelected();
+            EnsureSomeCameraIsSelected();
         });
     }
 
@@ -307,7 +294,7 @@ internal class MainViewModel : INotifyPropertyChanged
         _dispatcher.Invoke(() =>
         {
             Cameras.Add(e);
-            //EnsureSomeCameraIsSelected();
+            EnsureSomeCameraIsSelected();
         });
     }
 

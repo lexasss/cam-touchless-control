@@ -3,8 +3,16 @@
 namespace CameraTouchlessControl;
 
 /// <summary>
-/// Manages a ist of available USB devices of a certain PNP class
+/// Manages a ist of available USB devices filteres by a certain criteria
+/// (a list of fiields of Win32_PnPEntity https://learn.microsoft.com/en-us/windows/win32/cimwin32prov/win32-pnpentity)
 /// and fires events when this list changes.
+/// 
+/// Example:
+/// UsbService _usbService = new([
+///     new UsbFilter("PNPClass", ["Image", "Camera"])
+/// ]);
+/// _usbService.Inserted += UsbService_DeviceInserted;
+/// _usbService.Removed += UsbService_DeviceRemoved;
 /// </summary>
 public class UsbService : IDisposable
 {
@@ -117,19 +125,12 @@ public class UsbService : IDisposable
         {
             using var searcher = new ManagementObjectSearcher($"SELECT * FROM Win32_PnPEntity"); //  WHERE Caption LIKE '%{_searchKeyword}%'
 
+            System.Diagnostics.Debug.WriteLine($"==== WMI ====");
+            
             foreach (var device in searcher.Get())
             {
                 if (!_filters.All(filter => filter.IsMatching(device)))
                     continue;
-
-                /*
-                var pnpClass = device["PNPClass"]?.ToString() ?? string.Empty;
-
-                if (string.IsNullOrEmpty(pnpClass))
-                    continue;
-                if (!_pnpClasses.Any(c => string.Compare(c, pnpClass, true) == 0))
-                    continue;
-                */
 
                 var id = device["DeviceID"]?.ToString() ?? device.ToString();
                 var name = device["Name"]?.ToString() ?? "Unknown USB device";
@@ -181,15 +182,6 @@ public class UsbService : IDisposable
                 {
                     if (!_filters.All(filter => filter.IsMatching(rec)))
                         continue;
-
-                    /*
-                    var pnpClass = (string?)rec.Properties["PNPClass"]?.Value;
-
-                    if (string.IsNullOrEmpty(pnpClass))
-                        continue;
-                    if (!_pnpClasses.Any(c => string.Compare(c, pnpClass, true) == 0))
-                        continue;
-                    */
 
                     var name = (string?)rec.Properties["Name"]?.Value;
                     return CreateDevice(rec.Properties, name);

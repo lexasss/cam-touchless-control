@@ -12,15 +12,15 @@ namespace CameraTouchlessControl;
 /// 
 /// Usage:
 ///
-/// var cameraService = 
+/// var cameraService = new CameraService();
 /// cameraService.CameraAdded += CameraService_CameraAdded;
 /// cameraService.CameraRemoved += CameraService_CameraRemoved;
 /// cameraService.Frame += CameraService_FrameReceived;
 ///
-/// Task.Run(async () => // camera updating process is slow, it is wise to make it async
+/// foreach (var camera in _cameraService.Cameras)
 /// {
-///     await _cameraService.UpdateCameralist();
-/// });
+///     Cameras.Add(camera);
+/// }
 /// 
 /// </summary>
 public class CameraService : IDisposable
@@ -134,7 +134,7 @@ public class CameraService : IDisposable
             if (frame.Empty())
                 break;
 
-            Frame?.Invoke(this, frame);
+            Frame?.Invoke(this, frame.Flip(FlipMode.Y));
 
             Cv2.WaitKey(30);
         }

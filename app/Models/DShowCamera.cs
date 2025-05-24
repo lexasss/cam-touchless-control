@@ -2,13 +2,20 @@
 
 namespace CameraTouchlessControl;
 
-public class DShowCamera(VideoCaptureAPIs api, string apiName, int id, UsbDevice device)
+public class DShowCamera
 {
-    public VideoCaptureAPIs Api => api;
-    public string ApiName => apiName;
-    public int ID => id;
-    public UsbDevice Device => device;
-    public override string ToString() => Device.Name;
+    public VideoCaptureAPIs Api { get; }
+    public int ID { get; }
+    public UsbDevice Device { get; }
 
-    public static Mat WhiteImage { get; } = new Mat(480, 640, MatType.CV_8UC3, Scalar.White);
+    public DShowCamera(VideoCaptureAPIs api, int id, UsbDevice device)
+    {
+        Api = api;
+        ID = id;
+        Device = device;
+
+        System.Diagnostics.Debug.WriteLine($"{device.Name} {device.ID} {api} {id}");
+    }
+
+    public override string ToString() => Device.Name;
 }

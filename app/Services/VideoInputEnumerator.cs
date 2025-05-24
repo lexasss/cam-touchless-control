@@ -3,10 +3,12 @@ using System.Runtime.InteropServices.ComTypes;
 
 namespace CameraTouchlessControl;
 
-public static class CameraNameEnumerator
+public static class VideoInputEnumerator
 {
     public static UsbDevice[] Get()
     {
+        System.Diagnostics.Debug.WriteLine($"==== VideoInput ====");
+
         IMoniker[] moniker = new IMoniker[100];
         object? bagObj = null;
         List<UsbDevice> result = [];
@@ -19,14 +21,13 @@ public static class CameraNameEnumerator
                 throw new Exception();
 
             // create device enumerator
-            var comObj = Activator.CreateInstance(srvType);
-            if (comObj == null)
-                throw new Exception();
-
+            var comObj = Activator.CreateInstance(srvType) ?? throw new Exception();
             ICreateDevEnum enumDev = (ICreateDevEnum)comObj;
+
             // Create an enumerator to find filters of specified category
             enumDev.CreateClassEnumerator(VideoInputDevice, out IEnumMoniker enumMon, 0);
             Guid bagId = typeof(IPropertyBag).GUID;
+
             while (enumMon.Next(1, moniker, nint.Zero) == 0)
             {
                 // get property bag of the moniker
@@ -58,8 +59,8 @@ public static class CameraNameEnumerator
 
     // Internal
 
-    internal static readonly Guid SystemDeviceEnum = new Guid(0x62BE5D10, 0x60EB, 0x11D0, 0xBD, 0x3B, 0x00, 0xA0, 0xC9, 0x11, 0xCE, 0x86);
-    internal static readonly Guid VideoInputDevice = new Guid(0x860BB310, 0x5D01, 0x11D0, 0xBD, 0x3B, 0x00, 0xA0, 0xC9, 0x11, 0xCE, 0x86);
+    internal static readonly Guid SystemDeviceEnum = new(0x62BE5D10, 0x60EB, 0x11D0, 0xBD, 0x3B, 0x00, 0xA0, 0xC9, 0x11, 0xCE, 0x86);
+    internal static readonly Guid VideoInputDevice = new(0x860BB310, 0x5D01, 0x11D0, 0xBD, 0x3B, 0x00, 0xA0, 0xC9, 0x11, 0xCE, 0x86);
 
     [ComImport, Guid("55272A00-42CB-11CE-8135-00AA004BB851"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     internal interface IPropertyBag
