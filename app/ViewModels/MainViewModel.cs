@@ -166,20 +166,32 @@ public class MainViewModel : INotifyPropertyChanged
 
     public double Scale
     {
-        get;
-        private set;
+        get => field;
+        set
+        {
+            field = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Scale)));
+        }
     } = 0.9;
 
     public double OffsetX
     {
-        get;
-        private set;
+        get => field;
+        set
+        {
+            field = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OffsetX)));
+        }
     } = 0;
 
     public double OffsetY
     {
-        get;
-        private set;
+        get => field;
+        set
+        {
+            field = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OffsetY)));
+        }
     } = 0;
 
     #endregion

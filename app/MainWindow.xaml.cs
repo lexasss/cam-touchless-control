@@ -31,7 +31,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         Commands.MainViewCommand[] commands = [
             new Commands.ToggleHandTracker(ViewModel),
-            new Commands.ToggleCamera(ViewModel)
+            new Commands.ToggleCamera(ViewModel),
+            new Commands.ZoomIn(ViewModel),
+            new Commands.ZoomOut(ViewModel),
+            new Commands.PanLeft(ViewModel),
+            new Commands.PanRight(ViewModel),
+            new Commands.PanUp(ViewModel),
+            new Commands.PaneDown(ViewModel),
         ];
 
         foreach (var command in commands)
