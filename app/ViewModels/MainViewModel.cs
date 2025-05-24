@@ -1,4 +1,5 @@
-﻿using OpenCvSharp.WpfExtensions;
+﻿using CameraTouchlessControl.Services;
+using OpenCvSharp.WpfExtensions;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Media.Imaging;
@@ -185,10 +186,15 @@ public class MainViewModel : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public MainViewModel(HandTrackingService handTrackingService, CameraService cameraService, Dispatcher dispatcher)
+    public MainViewModel(
+        HandTrackingService handTrackingService,
+        CameraService cameraService,
+        ZoomPanService zoomPanService,
+        Dispatcher dispatcher)
     {
         _handTrackingService = handTrackingService;
         _cameraService = cameraService;
+        _zoomPanService = zoomPanService;
         _dispatcher = dispatcher;
 
         _cameraService.CameraAdded += CameraService_CameraAdded;
@@ -224,6 +230,7 @@ public class MainViewModel : INotifyPropertyChanged
 
     readonly HandTrackingService _handTrackingService;
     readonly CameraService _cameraService;
+    readonly ZoomPanService _zoomPanService;
     readonly Dispatcher _dispatcher;
 
     private void EnsureSomeHandTrackerIsSelected()
@@ -359,7 +366,7 @@ public class MainViewModel : INotifyPropertyChanged
 
         _dispatcher.Invoke(() =>
         {
-            //HandData?.Invoke(this, new HandLocation(in palm, in thumb, in index, in middle));
+            _zoomPanService.Feed(e);
         });
     }
 

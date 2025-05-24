@@ -2,32 +2,19 @@
 
 namespace CameraTouchlessControl.Commands;
 
-internal class ToggleHandTracker
+internal class ToggleHandTracker : MainViewCommand
 {
     public static RoutedCommand Instance = new();
-    public CommandBinding Binding { get; }
 
-    public ToggleHandTracker(MainViewModel vm)
+    public ToggleHandTracker(MainViewModel vm) : base(vm, Instance)
     {
-        _vm = vm;
+        var keyGesture = new KeyGesture(Key.T, ModifierKeys.Control);
 
-        Binding = new CommandBinding(
+        KeyBinding = new KeyBinding(
             Instance,
-            ToggleDeviceCmdExecuted,
-            ToggleDeviceCmdCanExecute);
+            keyGesture);
     }
 
-    // Internal
-
-    MainViewModel _vm;
-
-    private void ToggleDeviceCmdExecuted(object sender, ExecutedRoutedEventArgs e)
-    {
+    protected override void Execute(object? parameter) =>
         _vm.IsHandTrackingRunning = !_vm.IsHandTrackingRunning;
-    }
-
-    private void ToggleDeviceCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
-    {
-        e.CanExecute = true;
-    }
 }

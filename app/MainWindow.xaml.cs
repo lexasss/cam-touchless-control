@@ -26,9 +26,21 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         ViewModel = new MainViewModel(
             app.HandTrackingService,
             app.CameraService,
+            app.ZoomPanService,
             Dispatcher);
 
-        CommandBindings.Add(new Commands.ToggleHandTracker(ViewModel).Binding);
-        CommandBindings.Add(new Commands.ToggleCamera(ViewModel).Binding);
+        Commands.MainViewCommand[] commands = [
+            new Commands.ToggleHandTracker(ViewModel),
+            new Commands.ToggleCamera(ViewModel)
+        ];
+
+        foreach (var command in commands)
+        {
+            CommandBindings.Add(command.Binding);
+            if (command.KeyBinding != null)
+            {
+                InputBindings.Add(command.KeyBinding);
+            }
+        }
     }
 }

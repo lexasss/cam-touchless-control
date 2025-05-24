@@ -2,32 +2,19 @@
 
 namespace CameraTouchlessControl.Commands;
 
-internal class ToggleCamera
+internal class ToggleCamera : MainViewCommand
 {
     public static RoutedCommand Instance = new();
-    public CommandBinding Binding { get; }
 
-    public ToggleCamera(MainViewModel vm)
+    public ToggleCamera(MainViewModel vm) : base(vm, Instance)
     {
-        _vm = vm;
-
-        Binding = new CommandBinding(
+        var keyGesture = new KeyGesture(Key.C, ModifierKeys.Control);
+        
+        KeyBinding = new KeyBinding(
             Instance,
-            ToggleCameraCmdExecuted,
-            ToggleCameraCmdCanExecute);
+            keyGesture);
     }
 
-    // Internal
-
-    MainViewModel _vm;
-
-    private void ToggleCameraCmdExecuted(object sender, ExecutedRoutedEventArgs e)
-    {
+    protected override void Execute(object? parameter) =>
         _vm.IsCameraCapturing = !_vm.IsCameraCapturing;
-    }
-
-    private void ToggleCameraCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
-    {
-        e.CanExecute = true;
-    }
 }
