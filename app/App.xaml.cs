@@ -1,29 +1,20 @@
-﻿using Leap;
-using System.Windows;
-using System.Windows.Input;
+﻿using System.Windows;
 
 namespace CameraTouchlessControl;
 
 public partial class App : Application
 {
-    public LeapMotion? HandTrackingService { get; }
+    public HandTrackingService HandTrackingService { get; } = new();
     public CameraService CameraService { get; } = new();
 
     public App() : base()
     {
-        try
-        {
-            HandTrackingService = new();
+        HandTrackingService = new();
 
-            Exit += (s, e) =>
-            {
-                CameraService.Dispose();
-                HandTrackingService?.Dispose();
-            };
-        }
-        catch (Exception e)
+        Exit += (s, e) =>
         {
-            System.Diagnostics.Debug.WriteLine(e.Message);
-        }
+            CameraService.Dispose();
+            HandTrackingService?.Dispose();
+        };
     }
 }

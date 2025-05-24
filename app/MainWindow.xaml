@@ -7,6 +7,7 @@
         xmlns:commands="clr-namespace:CameraTouchlessControl.Commands"
         xmlns:conv="clr-namespace:CameraTouchlessControl.Converters"
         mc:Ignorable="d"
+        DataContext="{Binding Path=ViewModel, RelativeSource={RelativeSource Self}}"
         Style="{StaticResource MaterialDesignWindow}"
         Title="Hand tracker"
         Height="450" Width="800">
@@ -14,7 +15,7 @@
     <Window.Resources>
         <conv:Negate x:Key="negate"/>
     </Window.Resources>
-    
+
     <Grid>
         <Grid>
             <Grid.Style>
@@ -67,7 +68,8 @@
             </WrapPanel>
 
             <Grid Grid.Row="1" Grid.ColumnSpan="2"
-                  Background="Black">
+                  Background="Black"
+                  ClipToBounds="True">
                 <Grid.Style>
                     <Style TargetType="Grid">
                         <Style.Triggers>
@@ -77,8 +79,21 @@
                         </Style.Triggers>
                     </Style>
                 </Grid.Style>
-                <Image Margin="12"
-                   Source="{Binding CameraFrame}"/>
+                <DockPanel RenderTransformOrigin="0.5,0.5">
+                    <DockPanel.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform ScaleX="{Binding Scale}"
+                                            ScaleY="{Binding Scale}"/>
+                            <SkewTransform/>
+                            <RotateTransform/>
+                            <TranslateTransform X="{Binding OffsetX}"
+                                                Y="{Binding OffsetY}"/>
+                        </TransformGroup>
+                    </DockPanel.RenderTransform>
+                    <Image Margin="12"
+                           Source="{Binding CameraFrame}"
+                           Stretch="None"/>
+                </DockPanel>
             </Grid>
         </Grid>
         <StackPanel Grid.RowSpan="100" Grid.ColumnSpan="100"

@@ -1,5 +1,4 @@
-﻿using Leap;
-using OpenCvSharp.WpfExtensions;
+﻿using OpenCvSharp.WpfExtensions;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Media.Imaging;
@@ -9,8 +8,10 @@ using Camera = CameraTouchlessControl.UsbDevice;
 
 namespace CameraTouchlessControl;
 
-internal class MainViewModel : INotifyPropertyChanged
+public class MainViewModel : INotifyPropertyChanged
 {
+    #region Hand tracking props
+
     public bool IsHandTrackerReady
     {
         get => field;
@@ -85,6 +86,12 @@ internal class MainViewModel : INotifyPropertyChanged
         }
     } = false;
 
+    public ObservableCollection<LeapMotionDevice> HandTrackers { get; } = [];
+
+    #endregion
+
+    #region Camera props
+
     public bool IsCameraCapturing
     {
         get => field;
@@ -150,25 +157,35 @@ internal class MainViewModel : INotifyPropertyChanged
         }
     } = null;
 
-    public ObservableCollection<LeapMotionDevice> HandTrackers { get; } = [];
-
     public ObservableCollection<Camera> Cameras { get; } = [];
 
-    /// <summary>
-    /// Maximum distance for the hand to be tracked, in cm
-    /// </summary>
-    public double MaxHandTrackingDistance { get; set; } = 50;
+    #endregion
 
-    /// <summary>
-    /// Reports hand location as 3 vectors: palm, infdex finger tip and middle finger tip.
-    /// The coordinate system is as it used to be in the original Leap Motion:
-    /// X = left, Y = forward, Z = down
-    /// </summary>
-    public event EventHandler<HandLocation>? HandData;
+    #region ZoomPan props
+
+    public double Scale
+    {
+        get;
+        private set;
+    } = 0.9;
+
+    public double OffsetX
+    {
+        get;
+        private set;
+    } = 0;
+
+    public double OffsetY
+    {
+        get;
+        private set;
+    } = 0;
+
+    #endregion
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public MainViewModel(LeapMotion? handTrackingService, CameraService cameraService, Dispatcher dispatcher)
+    public MainViewModel(HandTrackingService handTrackingService, CameraService cameraService, Dispatcher dispatcher)
     {
         _handTrackingService = handTrackingService;
         _cameraService = cameraService;
@@ -186,39 +203,26 @@ internal class MainViewModel : INotifyPropertyChanged
 
         EnsureSomeCameraIsSelected();
 
-        if (_handTrackingService != null)
+        IsHandTrackerReady = _handTrackingService.IsReady;
+
+        _handTrackingService.ConnectionStatusChanged += HandTracker_ConnectionStatusChanged;
+        _handTrackingService.DeviceAdded += HandTracker_DeviceAdded;
+        _handTrackingService.DeviceRemoved += HandTracker_DeviceRemoved;
+        _handTrackingService.HandData += HandTrackingService_HandData;
+
+        foreach (var device in _handTrackingService.Devices)
         {
-            IsHandTrackerReady = true;
-
-            _handTrackingService.Connect += Lm_Connect;
-            _handTrackingService.Disconnect += Lm_Disconnect;
-
-            _handTrackingService.Device += Lm_Device;
-            _handTrackingService.DeviceLost += Lm_DeviceLost;
-            _handTrackingService.DeviceFailure += Lm_DeviceFailure;
-
-            _handTrackingService.FrameReady += Lm_FrameReady;
-
-            // Ask for frames even in the background - this is important!
-            _handTrackingService.SetPolicy(LeapMotion.PolicyFlag.POLICY_BACKGROUND_FRAMES);
-            _handTrackingService.SetPolicy(LeapMotion.PolicyFlag.POLICY_ALLOW_PAUSE_RESUME);
-
-            _handTrackingService.ClearPolicy(LeapMotion.PolicyFlag.POLICY_IMAGES);       // NO images, please
-
-            foreach (var device in _handTrackingService.Devices)
-            {
-                HandTrackers.Add(new LeapMotionDevice(device));
-            }
-
-            HasHandTrackers = _handTrackingService.Devices.Count > 0;
-
-            EnsureSomeHandTrackerIsSelected();
+            HandTrackers.Add(new LeapMotionDevice(device));
         }
+
+        HasHandTrackers = _handTrackingService.Devices.Count > 0;
+
+        EnsureSomeHandTrackerIsSelected();
     }
 
     // Internal
 
-    readonly LeapMotion? _handTrackingService = null;
+    readonly HandTrackingService _handTrackingService;
     readonly CameraService _cameraService;
     readonly Dispatcher _dispatcher;
 
@@ -240,7 +244,7 @@ internal class MainViewModel : INotifyPropertyChanged
 
     private void StartHandTracking()
     {
-        if (_handTrackingService == null || IsHandTrackerConnected)
+        if (IsHandTrackerConnected)
             return;
 
         if (_handTrackingService.Devices.Count == 0)
@@ -255,7 +259,7 @@ internal class MainViewModel : INotifyPropertyChanged
         }
         else
         {
-            _handTrackingService.StartConnection();
+            _handTrackingService.Connect();
         }
     }
 
@@ -307,17 +311,9 @@ internal class MainViewModel : INotifyPropertyChanged
 
     #region LM events
 
-    private void Lm_DeviceFailure(object? sender, DeviceFailureEventArgs e)
+    private void HandTracker_DeviceRemoved(object? sender, Leap.Device e)
     {
-        _dispatcher.Invoke(() =>
-        {
-            System.Diagnostics.Debug.WriteLine($"Hand tracking device {e.DeviceSerialNumber} failure: {e.ErrorMessage} ({e.ErrorCode})");
-        });
-    }
-
-    private void Lm_DeviceLost(object? sender, DeviceEventArgs e)
-    {
-        var device = HandTrackers.FirstOrDefault(d => d.Device.SerialNumber == e.Device.SerialNumber);
+        var device = HandTrackers.FirstOrDefault(d => d.Device.SerialNumber == e.SerialNumber);
 
         if (device != null)
         {
@@ -332,79 +328,39 @@ internal class MainViewModel : INotifyPropertyChanged
                 HasHandTrackers = _handTrackingService?.Devices.Count > 0;
             });
 
-            System.Diagnostics.Debug.WriteLine($"Hand tracking device {e.Device.SerialNumber} was lost");
+            System.Diagnostics.Debug.WriteLine($"Hand tracking device {e.SerialNumber} was lost");
         }
     }
 
-    private void Lm_Device(object? sender, DeviceEventArgs e)
+    private void HandTracker_DeviceAdded(object? sender, Leap.Device e)
     {
-        if (HandTrackers.FirstOrDefault(d => d.Device.SerialNumber == e.Device.SerialNumber) == null)
+        if (HandTrackers.FirstOrDefault(d => d.Device.SerialNumber == e.SerialNumber) == null)
         {
             _dispatcher.Invoke(() =>
             {
-                HandTrackers.Add(new LeapMotionDevice(e.Device));
+                HandTrackers.Add(new LeapMotionDevice(e));
                 HasHandTrackers = _handTrackingService?.Devices.Count > 0;
                 EnsureSomeHandTrackerIsSelected();
             });
 
-            System.Diagnostics.Debug.WriteLine($"Found hand tracking device {e.Device.SerialNumber}");
+            System.Diagnostics.Debug.WriteLine($"Found hand tracking device {e.SerialNumber}");
         }
     }
 
-    private void Lm_Disconnect(object? sender, ConnectionLostEventArgs e)
+    private void HandTracker_ConnectionStatusChanged(object? sender, bool e)
     {
-        IsHandTrackerConnected = false;
+        IsHandTrackerConnected = e;
     }
 
-    private void Lm_Connect(object? sender, ConnectionEventArgs e)
-    {
-        IsHandTrackerConnected = true;
-    }
-
-    private void Lm_FrameReady(object? sender, FrameEventArgs e)
+    private void HandTrackingService_HandData(object? sender, HandLocation e)
     {
         if (!IsHandTrackingRunning)
             return;
 
-        bool handDetected = false;
-
-        int handIndex = 0;
-
-        while (handIndex < e.frame.Hands.Count && e.frame.Hands[handIndex].IsLeft)
+        _dispatcher.Invoke(() =>
         {
-            handIndex++;
-        }
-
-        if (handIndex < e.frame.Hands.Count)
-        {
-            var palm = e.frame.Hands[handIndex].PalmPosition / 10;
-            var fingers = e.frame.Hands[handIndex].Fingers;
-            var thumb = fingers[0].TipPosition / 10;
-            var index = fingers[1].TipPosition / 10;
-            var middle = fingers[2].TipPosition / 10;
-
-            if (Math.Sqrt(palm.x * palm.x + palm.y * palm.y + palm.z * palm.z) < MaxHandTrackingDistance)
-            {
-                handDetected = true;
-                _dispatcher.Invoke(() =>
-                {
-                    HandData?.Invoke(this, new HandLocation(in palm, in thumb, in index, in middle));
-                });
-            }
-        }
-
-        if (!handDetected)
-        {
-            _dispatcher.Invoke(() =>
-            {
-                HandData?.Invoke(this, new HandLocation());
-            });
-        }
-
-        // e.frame.Hands[0].Fingers[0..4].TipPosition.x;
-        // e.frame.Hands[0].PalmVelocity.Magnitude);
-        // e.frame.Hands[0].Fingers[x].TipPosition.DistanceTo(e.frame.Hands[0].Fingers[x + 1].TipPosition);
-        // e.frame.Hands[0].PalmNormal.x
+            //HandData?.Invoke(this, new HandLocation(in palm, in thumb, in index, in middle));
+        });
     }
 
     #endregion
