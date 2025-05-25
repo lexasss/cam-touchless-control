@@ -16,5 +16,5 @@ internal class PanUp : MainViewCommand
     }
 
     protected override void Execute(object? parameter) =>
-        _vm.OffsetY -= 20;
+        _vm.OffsetY -= ZoomPanConfig.Instance.PanGain;
 }

@@ -48,10 +48,10 @@ public class HandTrackingService : IDisposable
         _lm.FrameReady += Lm_FrameReady;
 
         // Ask for frames even in the background - this is important!
-        _lm.SetPolicy(LeapMotion.PolicyFlag.POLICY_BACKGROUND_FRAMES);
-        _lm.SetPolicy(LeapMotion.PolicyFlag.POLICY_ALLOW_PAUSE_RESUME);
+        //_lm.SetPolicy(LeapMotion.PolicyFlag.POLICY_BACKGROUND_FRAMES);
+        //_lm.SetPolicy(LeapMotion.PolicyFlag.POLICY_ALLOW_PAUSE_RESUME);
 
-        _lm.ClearPolicy(LeapMotion.PolicyFlag.POLICY_IMAGES);       // NO images, please
+        _lm.ClearPolicy(LeapMotion.PolicyFlag.POLICY_IMAGES);
     }
 
     public void Connect()
@@ -91,7 +91,7 @@ public class HandTrackingService : IDisposable
 
         int handIndex = 0;
 
-        while (handIndex < e.frame.Hands.Count && e.frame.Hands[handIndex].IsLeft)
+        while (handIndex < e.frame.Hands.Count && e.frame.Hands[handIndex].IsRight) // accept only left hand
         {
             handIndex++;
         }
@@ -100,6 +100,7 @@ public class HandTrackingService : IDisposable
         {
             var fingers = e.frame.Hands[handIndex].Fingers;
 
+            // convert mm to cm
             var palm = e.frame.Hands[handIndex].PalmPosition / 10;
             var thumb = fingers[0].TipPosition / 10;
             var index = fingers[1].TipPosition / 10;

@@ -9,13 +9,19 @@ public class HandLocation(ref readonly Vector palm, ref readonly Vector thumb, r
     public Vector Index { get; set; } = index;
     public Vector Middle { get; set; } = middle;
 
-    public HandLocation() : this(in Vector.Zero, in Vector.Zero, in Vector.Zero, in Vector.Zero) { }
+    public bool IsEmpty { get; private set; } = false;
 
-    public void CopyTo(HandLocation rhs)
+    public HandLocation() : this(in Vector.Zero, in Vector.Zero, in Vector.Zero, in Vector.Zero)
     {
-        rhs.Palm = Palm;
-        rhs.Thumb = Thumb;
-        rhs.Index = Index;
-        rhs.Middle = Middle;
+        IsEmpty = true;
+    }
+
+    public void CopyTo(HandLocation lhs)
+    {
+        lhs.Palm = Palm;
+        lhs.Thumb = Thumb;
+        lhs.Index = Index;
+        lhs.Middle = Middle;
+        lhs.IsEmpty = IsEmpty;
     }
 }

@@ -172,7 +172,7 @@ public class MainViewModel : INotifyPropertyChanged
             field = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Scale)));
         }
-    } = 0.9;
+    } = 1.0;
 
     public double OffsetX
     {
@@ -236,6 +236,9 @@ public class MainViewModel : INotifyPropertyChanged
         HasHandTrackers = _handTrackingService.Devices.Count > 0;
 
         EnsureSomeHandTrackerIsSelected();
+
+        _zoomPanService.ScaleChanged += ZoomPanService_ScaleChanged;
+        _zoomPanService.OffsetChanged += ZoomPanService_OffsetChanged;
     }
 
     // Internal
@@ -380,6 +383,21 @@ public class MainViewModel : INotifyPropertyChanged
         {
             _zoomPanService.Feed(e);
         });
+    }
+
+    #endregion
+
+    #region ZoomPan events
+
+    private void ZoomPanService_OffsetChanged(object? sender, System.Windows.Point e)
+    {
+        OffsetX = e.X;
+        OffsetY = e.Y;
+    }
+
+    private void ZoomPanService_ScaleChanged(object? sender, double e)
+    {
+        Scale = e;
     }
 
     #endregion

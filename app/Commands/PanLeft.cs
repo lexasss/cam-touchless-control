@@ -16,5 +16,5 @@ internal class PanLeft : MainViewCommand
     }
 
     protected override void Execute(object? parameter) =>
-        _vm.OffsetX -= 20;
+        _vm.OffsetX -= ZoomPanConfig.Instance.PanGain;
 }
