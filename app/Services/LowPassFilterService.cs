@@ -2,9 +2,11 @@
 
 internal class LowPassFilterService
 {
+    public double Alpha { get; set; }
+
     public LowPassFilterService(double alpha)
     {
-        _alpha = alpha;
+        Alpha = alpha;
     }
 
     public void Reset()
@@ -21,15 +23,13 @@ internal class LowPassFilterService
         }
         else
         {
-            double result = (double)(_prevValue + _alpha * (value - _prevValue));
+            double result = (double)(_prevValue + Alpha * (value - _prevValue));
             _prevValue = result;
             return result;
         }
     }
 
     // Internal
-
-    readonly double _alpha;
 
     double? _prevValue = null;
 }

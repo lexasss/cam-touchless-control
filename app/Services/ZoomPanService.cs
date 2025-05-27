@@ -70,6 +70,10 @@ public class ZoomPanService
                 _ => throw new NotImplementedException()
             };
 
+            _lpfX.Alpha = _handState == HandState.Still ? LOW_PASS_FILTER_ALPHA_STILL : LOW_PASS_FILTER_ALPHA_MOVING;
+            _lpfY.Alpha = _handState == HandState.Still ? LOW_PASS_FILTER_ALPHA_STILL : LOW_PASS_FILTER_ALPHA_MOVING;
+            _lpfZ.Alpha = _handState == HandState.Still ? LOW_PASS_FILTER_ALPHA_STILL : LOW_PASS_FILTER_ALPHA_MOVING;
+
             if (_handState == HandState.Still && _reference == null)
             {
                 _reference = handLocation;
@@ -120,7 +124,8 @@ public class ZoomPanService
     const double ADJUSTMENT_THRESHOLD = 0.003; // cm per frame, the hand is "still" below this threshold, and "adjusting" when above it
     const double MOVEMENT_THRESHOLD = 0.01;    // cm per frame, the hand is "adjusting" below this threshold, and "moving" when above it
     const int COUNTER_WIN_THRESHOLD = 10;
-    const double LOW_PASS_FILTER_ALPHA = 0.6;
+    const double LOW_PASS_FILTER_ALPHA_STILL = 0.001;
+    const double LOW_PASS_FILTER_ALPHA_MOVING = 0.1;
     const int EVENT_THROTTLING_INTERVAL = 200; // ms
     const int MOVEMENT_THROTTLING_INTERVAL = 40; // ms
     const double ZOOMING_SENSITIVITY = 0.05;
@@ -140,9 +145,9 @@ public class ZoomPanService
     readonly RateLimitedAction _offsetChangeNotification;
     readonly RateLimitedAction _handCursorMovedNotification;
 
-    readonly LowPassFilterService _lpfX = new LowPassFilterService(LOW_PASS_FILTER_ALPHA);
-    readonly LowPassFilterService _lpfY = new LowPassFilterService(LOW_PASS_FILTER_ALPHA);
-    readonly LowPassFilterService _lpfZ = new LowPassFilterService(LOW_PASS_FILTER_ALPHA);
+    readonly LowPassFilterService _lpfX = new LowPassFilterService(LOW_PASS_FILTER_ALPHA_MOVING);
+    readonly LowPassFilterService _lpfY = new LowPassFilterService(LOW_PASS_FILTER_ALPHA_MOVING);
+    readonly LowPassFilterService _lpfZ = new LowPassFilterService(LOW_PASS_FILTER_ALPHA_MOVING);
 
     HandState _handState = HandState.Invisible;
     double _stateExitUpThreshold = 1e8;

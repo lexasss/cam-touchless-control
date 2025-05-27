@@ -294,9 +294,9 @@ public class MainViewModel : INotifyPropertyChanged
 
     // Internal
 
-    readonly Brush StillCursorBrush = new SolidColorBrush(Color.FromArgb(80, 255, 255, 255));
+    readonly Brush StillCursorBrush = new SolidColorBrush(Color.FromArgb(96, 255, 255, 255));
     readonly Brush AdjustingCursorBrush = new SolidColorBrush(Color.FromArgb(255, 0, 255, 0));
-    readonly Brush MovingCursorBrush = new SolidColorBrush(Color.FromArgb(80, 255, 128, 0));
+    readonly Brush MovingCursorBrush = new SolidColorBrush(Color.FromArgb(192, 255, 128, 0));
 
     readonly HandTrackingService _handTrackingService;
     readonly CameraService _cameraService;
