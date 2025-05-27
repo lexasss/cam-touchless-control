@@ -2,6 +2,8 @@
 using OpenCvSharp.WpfExtensions;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
@@ -194,9 +196,56 @@ public class MainViewModel : INotifyPropertyChanged
         }
     } = 0;
 
+    public double CursorX
+    {
+        get => field;
+        set
+        {
+            field = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CursorX)));
+        }
+    } = -1e8;
+
+    public double CursorY
+    {
+        get => field;
+        set
+        {
+            field = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CursorY)));
+        }
+    } = -1e8;
+
+    public double CursorSize
+    {
+        get => field;
+        set
+        {
+            field = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CursorSize)));
+        }
+    } = 86;
+
+    public Brush CursorBrush
+    {
+        get => field;
+        set
+        {
+            field = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CursorBrush)));
+        }
+    } = new SolidColorBrush(Color.FromArgb(80, 255, 255, 255));
+
     #endregion
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public class RequestViewportSizeEventArgs : EventArgs
+    {
+        public Size ViewportSize { get; set; } = default;
+    }
+
+    public event EventHandler<RequestViewportSizeEventArgs>? RequestViewportSize;
 
     public MainViewModel(
         HandTrackingService handTrackingService,
@@ -239,9 +288,15 @@ public class MainViewModel : INotifyPropertyChanged
 
         _zoomPanService.ScaleChanged += ZoomPanService_ScaleChanged;
         _zoomPanService.OffsetChanged += ZoomPanService_OffsetChanged;
+        _zoomPanService.HandCursorMoved += ZoomPanService_HandCursorMoved;
+        _zoomPanService.HandStateChanged += ZoomPanService_HandStateChanged;
     }
 
     // Internal
+
+    readonly Brush StillCursorBrush = new SolidColorBrush(Color.FromArgb(80, 255, 255, 255));
+    readonly Brush AdjustingCursorBrush = new SolidColorBrush(Color.FromArgb(255, 0, 255, 0));
+    readonly Brush MovingCursorBrush = new SolidColorBrush(Color.FromArgb(80, 255, 128, 0));
 
     readonly HandTrackingService _handTrackingService;
     readonly CameraService _cameraService;
@@ -398,6 +453,34 @@ public class MainViewModel : INotifyPropertyChanged
     private void ZoomPanService_ScaleChanged(object? sender, double e)
     {
         Scale = e;
+    }
+
+    private void ZoomPanService_HandStateChanged(object? sender, ZoomPanService.HandState e)
+    {
+        if (e == ZoomPanService.HandState.Invisible)
+        {
+            CursorX = -1e8;
+            CursorY = -1e8;
+        }
+        else
+        {
+            CursorBrush = e switch
+            {
+                ZoomPanService.HandState.Still => StillCursorBrush,
+                ZoomPanService.HandState.Adjusting => AdjustingCursorBrush,
+                ZoomPanService.HandState.Moving => MovingCursorBrush,
+                _ => CursorBrush
+            };
+        }
+    }
+
+    private void ZoomPanService_HandCursorMoved(object? sender, System.Numerics.Vector3 e)
+    {
+        var request = new RequestViewportSizeEventArgs();
+        RequestViewportSize?.Invoke(this, request);
+
+        CursorX = request.ViewportSize.Width / 2 + e.X;
+        CursorY = request.ViewportSize.Height / 2 + e.Z;
     }
 
     #endregion

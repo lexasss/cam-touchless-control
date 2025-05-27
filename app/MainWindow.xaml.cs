@@ -29,6 +29,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             app.ZoomPanService,
             Dispatcher);
 
+        ViewModel.RequestViewportSize += (s, e) => e.ViewportSize =
+            new Size(cnvViewportTopLayer.ActualWidth, cnvViewportTopLayer.ActualHeight);
+
         Commands.MainViewCommand[] commands = [
             new Commands.ToggleHandTracker(ViewModel),
             new Commands.ToggleCamera(ViewModel),

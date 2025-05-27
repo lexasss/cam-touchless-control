@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Numerics;
+using System.Windows;
 using ThrottleDebounce;
 
 namespace CameraTouchlessControl.Services;
@@ -15,14 +16,17 @@ public class ZoomPanService
 
     public event EventHandler<double>? ScaleChanged;
     public event EventHandler<Point>? OffsetChanged;
+    public event EventHandler<Vector3>? HandCursorMoved;
     public event EventHandler<HandState>? HandStateChanged;
 
     public ZoomPanService()
     {
-        TimeSpan throttlingInterval = TimeSpan.FromMilliseconds(EVENT_THROTTLING_INTERVAL);
+        TimeSpan eventThrottlingInterval = TimeSpan.FromMilliseconds(EVENT_THROTTLING_INTERVAL);
+        TimeSpan movementThrottlingInterval = TimeSpan.FromMilliseconds(MOVEMENT_THROTTLING_INTERVAL);
 
-        _scaleChangeNotification = Throttler.Throttle(FireScaleChangedEvent, throttlingInterval);
-        _offsetChangeNotification = Throttler.Throttle(FireOffsetChangedEvent, throttlingInterval);
+        _scaleChangeNotification = Throttler.Throttle(FireScaleChangedEvent, eventThrottlingInterval);
+        _offsetChangeNotification = Throttler.Throttle(FireOffsetChangedEvent, eventThrottlingInterval);
+        _handCursorMovedNotification = Throttler.Throttle(FireHandCursorMovedEvent, movementThrottlingInterval);
     }
 
     public void Feed(HandLocation handLocation)
@@ -95,15 +99,17 @@ public class ZoomPanService
             var y = _lpfY.Feed(handLocation.Palm.y);
             var z = _lpfZ.Feed(handLocation.Palm.z);
 
-            double dx = x - _reference.Palm.x;
-            double dy = y - _reference.Palm.y;
-            double dz = z - _reference.Palm.z;
+            _dx = x - _reference.Palm.x;
+            _dy = y - _reference.Palm.y;
+            _dz = z - _reference.Palm.z;
 
-            _adjScale = _scale - dy * ZOOMING_SENSITIVITY;
+            _handCursorMovedNotification.Invoke();
+
+            _adjScale = _scale - _dy * ZOOMING_SENSITIVITY;
             _scaleChangeNotification.Invoke();
 
-            _adjOffsetX = _offsetX + dx * OFFSET_SENSITIVITY;
-            _adjOffsetY = _offsetY + dz * OFFSET_SENSITIVITY;
+            _adjOffsetX = _offsetX + _dx * OFFSET_SENSITIVITY;
+            _adjOffsetY = _offsetY + _dz * OFFSET_SENSITIVITY;
             _offsetChangeNotification.Invoke();
         }
     }
@@ -116,8 +122,10 @@ public class ZoomPanService
     const int COUNTER_WIN_THRESHOLD = 10;
     const double LOW_PASS_FILTER_ALPHA = 0.6;
     const int EVENT_THROTTLING_INTERVAL = 200; // ms
+    const int MOVEMENT_THROTTLING_INTERVAL = 40; // ms
     const double ZOOMING_SENSITIVITY = 0.05;
     const double OFFSET_SENSITIVITY = 10;
+    const float HAND_CUSOR_MOVEMENT_SCALE = 10;
 
     readonly HandLocation?[] _buffer = new HandLocation?[BUFFER_SIZE];
     readonly Dictionary<HandState, int> _stateCandidateCounters = new()
@@ -130,6 +138,7 @@ public class ZoomPanService
 
     readonly RateLimitedAction _scaleChangeNotification;
     readonly RateLimitedAction _offsetChangeNotification;
+    readonly RateLimitedAction _handCursorMovedNotification;
 
     readonly LowPassFilterService _lpfX = new LowPassFilterService(LOW_PASS_FILTER_ALPHA);
     readonly LowPassFilterService _lpfY = new LowPassFilterService(LOW_PASS_FILTER_ALPHA);
@@ -149,6 +158,10 @@ public class ZoomPanService
     double _adjOffsetX = 0;
     double _adjOffsetY = 0;
 
+    double _dx = 0;
+    double _dy = 0;
+    double _dz = 0;
+
     private void FireScaleChangedEvent()
     {
         if (_handState == HandState.Still ||  _handState == HandState.Adjusting)
@@ -164,6 +177,19 @@ public class ZoomPanService
         {
             OffsetChanged?.Invoke(this, new Point(_adjOffsetX, _adjOffsetY));
             System.Diagnostics.Debug.WriteLine($"OFFSET {_adjOffsetX:F1} {_adjOffsetY:F1}");
+        }
+    }
+
+    private void FireHandCursorMovedEvent()
+    {
+        if (_handState != HandState.Invisible)
+        {
+            HandCursorMoved?.Invoke(this, new Vector3(
+                (float)_dx * HAND_CUSOR_MOVEMENT_SCALE,
+                (float)_dy * HAND_CUSOR_MOVEMENT_SCALE,
+                (float)_dz * HAND_CUSOR_MOVEMENT_SCALE
+            ));
+            //System.Diagnostics.Debug.WriteLine($"OFFSET {_dx:F1} {_dz:F1}");
         }
     }
 
