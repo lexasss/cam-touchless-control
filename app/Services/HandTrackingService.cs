@@ -61,6 +61,7 @@ public class HandTrackingService : IDisposable
 
     public void Dispose()
     {
+        _lm?.StopConnection();
         _lm?.Dispose();
         GC.SuppressFinalize(this);
     }

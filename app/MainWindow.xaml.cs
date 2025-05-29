@@ -30,7 +30,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             Dispatcher);
 
         ViewModel.RequestViewportSize += (s, e) => e.ViewportSize =
-            new Size(cnvViewportTopLayer.ActualWidth, cnvViewportTopLayer.ActualHeight);
+            new Size(cnvViewportOverlay.ActualWidth, cnvViewportOverlay.ActualHeight);
 
         Commands.MainViewCommand[] commands = [
             new Commands.ToggleHandTracker(ViewModel),

@@ -16,9 +16,7 @@ public static class VideoInputEnumerator
         try
         {
             // Get the system device enumerator
-            var srvType = Type.GetTypeFromCLSID(SystemDeviceEnum);
-            if (srvType == null)
-                throw new Exception();
+            var srvType = Type.GetTypeFromCLSID(SystemDeviceEnum) ?? throw new Exception();
 
             // create device enumerator
             var comObj = Activator.CreateInstance(srvType) ?? throw new Exception();
@@ -31,7 +29,10 @@ public static class VideoInputEnumerator
             while (enumMon.Next(1, moniker, nint.Zero) == 0)
             {
                 // get property bag of the moniker
+#pragma warning disable CS8625
                 moniker[0].BindToStorage(null, null, ref bagId, out bagObj);
+#pragma warning restore CS8625
+
                 var bag = (IPropertyBag)bagObj;
 
                 object name = "";

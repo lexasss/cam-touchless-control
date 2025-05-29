@@ -294,6 +294,9 @@ public class MainViewModel : INotifyPropertyChanged
 
     // Internal
 
+    const float HAND_CUSOR_MOVEMENT_SCALE = 10;
+    const float HAND_CUSOR_SIZE_SCALE = 3;
+
     readonly Brush StillCursorBrush = new SolidColorBrush(Color.FromArgb(96, 255, 255, 255));
     readonly Brush AdjustingCursorBrush = new SolidColorBrush(Color.FromArgb(255, 0, 255, 0));
     readonly Brush MovingCursorBrush = new SolidColorBrush(Color.FromArgb(192, 255, 128, 0));
@@ -479,8 +482,9 @@ public class MainViewModel : INotifyPropertyChanged
         var request = new RequestViewportSizeEventArgs();
         RequestViewportSize?.Invoke(this, request);
 
-        CursorX = request.ViewportSize.Width / 2 + e.X;
-        CursorY = request.ViewportSize.Height / 2 + e.Z;
+        CursorSize = Math.Max(16, 86 - e.Y * HAND_CUSOR_SIZE_SCALE);
+        CursorX = request.ViewportSize.Width / 2 + e.X * HAND_CUSOR_MOVEMENT_SCALE - CursorSize / 2;
+        CursorY = request.ViewportSize.Height / 2 + e.Z * HAND_CUSOR_MOVEMENT_SCALE - CursorSize / 2;
     }
 
     #endregion

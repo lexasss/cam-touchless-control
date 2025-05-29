@@ -130,7 +130,6 @@ public class ZoomPanService
     const int MOVEMENT_THROTTLING_INTERVAL = 40; // ms
     const double ZOOMING_SENSITIVITY = 0.05;
     const double OFFSET_SENSITIVITY = 10;
-    const float HAND_CUSOR_MOVEMENT_SCALE = 10;
 
     readonly HandLocation?[] _buffer = new HandLocation?[BUFFER_SIZE];
     readonly Dictionary<HandState, int> _stateCandidateCounters = new()
@@ -145,9 +144,9 @@ public class ZoomPanService
     readonly RateLimitedAction _offsetChangeNotification;
     readonly RateLimitedAction _handCursorMovedNotification;
 
-    readonly LowPassFilterService _lpfX = new LowPassFilterService(LOW_PASS_FILTER_ALPHA_MOVING);
-    readonly LowPassFilterService _lpfY = new LowPassFilterService(LOW_PASS_FILTER_ALPHA_MOVING);
-    readonly LowPassFilterService _lpfZ = new LowPassFilterService(LOW_PASS_FILTER_ALPHA_MOVING);
+    readonly LowPassFilterService _lpfX = new(LOW_PASS_FILTER_ALPHA_MOVING);
+    readonly LowPassFilterService _lpfY = new(LOW_PASS_FILTER_ALPHA_MOVING);
+    readonly LowPassFilterService _lpfZ = new(LOW_PASS_FILTER_ALPHA_MOVING);
 
     HandState _handState = HandState.Invisible;
     double _stateExitUpThreshold = 1e8;
@@ -171,8 +170,9 @@ public class ZoomPanService
     {
         if (_handState == HandState.Still ||  _handState == HandState.Adjusting)
         {
-            ScaleChanged?.Invoke(this, _adjScale);
-            System.Diagnostics.Debug.WriteLine($"ZOOM {_adjScale:F2}");
+            double scale = _adjScale < 1 ? _adjScale : Math.Pow(_adjScale, 1.5);
+            ScaleChanged?.Invoke(this, scale);
+            System.Diagnostics.Debug.WriteLine($"ZOOM {scale:F2}");
         }
     }
 
@@ -189,11 +189,7 @@ public class ZoomPanService
     {
         if (_handState != HandState.Invisible)
         {
-            HandCursorMoved?.Invoke(this, new Vector3(
-                (float)_dx * HAND_CUSOR_MOVEMENT_SCALE,
-                (float)_dy * HAND_CUSOR_MOVEMENT_SCALE,
-                (float)_dz * HAND_CUSOR_MOVEMENT_SCALE
-            ));
+            HandCursorMoved?.Invoke(this, new Vector3((float)_dx, (float)_dy, (float)_dz));
             //System.Diagnostics.Debug.WriteLine($"OFFSET {_dx:F1} {_dz:F1}");
         }
     }

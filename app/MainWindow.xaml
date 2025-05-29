@@ -6,68 +6,87 @@
         xmlns:local="clr-namespace:CameraTouchlessControl"
         xmlns:commands="clr-namespace:CameraTouchlessControl.Commands"
         xmlns:conv="clr-namespace:CameraTouchlessControl.Converters"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         DataContext="{Binding Path=ViewModel, RelativeSource={RelativeSource Self}}"
         Style="{StaticResource MaterialDesignWindow}"
         Title="Hand tracker"
-        Height="450" Width="800">
+        Width="656"
+        Height="600"
+        MinWidth="656"
+        MinHeight="600">
 
     <Window.Resources>
         <conv:Negate x:Key="negate"/>
+        <conv:BooleanToVisible x:Key="bool2vis"/>
+        <sys:String x:Key="not">False</sys:String>
     </Window.Resources>
 
     <Grid>
         <Grid>
-            <Grid.Style>
-                <Style TargetType="Grid">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsHandTrackerReady, Mode=OneWay}" Value="False">
-                            <Setter Property="Visibility" Value="Collapsed" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Grid.Style>
-
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
 
-            <WrapPanel Grid.Row="0" Grid.Column="0"
-                       HorizontalAlignment="Center"
-                       Margin="12">
-                <Label VerticalAlignment="Center">Tracking device</Label>
-                <ComboBox MinWidth="160"
-                          Margin="12,0"
-                          IsEnabled="{Binding ElementName=tbnToggleTrackingDevice, Path=IsChecked, Converter={StaticResource negate}, Mode=OneWay}"
-                          ItemsSource="{Binding HandTrackers, Mode=OneWay}"
-                          SelectedItem="{Binding SelectedHandTracker, Mode=OneWay}"/>
-                <ToggleButton Name="tbnToggleTrackingDevice"
-                              IsEnabled="{Binding HasSelectedHandTracker, Mode=OneWay}"
-                              IsChecked="{Binding IsHandTrackingRunning, Mode=OneWay}"
-                              Command="{x:Static commands:ToggleHandTracker.Instance}" />
-            </WrapPanel>
+            <Grid Grid.Row="0"
+                  MaxWidth="940">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                
+                <WrapPanel Grid.Column="0"
+                           HorizontalAlignment="Center"
+                           Margin="12">
+                    <Label VerticalAlignment="Center"
+                           Margin="0,0,12,0"
+                           Content="Tracking device"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox Grid.Column="0"
+                                  MinWidth="160"
+                                  IsEnabled="{Binding ElementName=tbnToggleTrackingDevice, Path=IsChecked, Converter={StaticResource negate}, Mode=OneWay}"
+                                  ItemsSource="{Binding HandTrackers, Mode=OneWay}"
+                                  SelectedItem="{Binding SelectedHandTracker, Mode=OneWay}"/>
+                        <ToggleButton Name="tbnToggleTrackingDevice" Grid.Column="1"
+                                      Margin="12,0,0,0"
+                                      IsEnabled="{Binding HasSelectedHandTracker, Mode=OneWay}"
+                                      IsChecked="{Binding IsHandTrackingRunning, Mode=OneWay}"
+                                      Command="{x:Static commands:ToggleHandTracker.Instance}" />
+                    </Grid>
+                </WrapPanel>
 
-            <WrapPanel Grid.Row="0" Grid.Column="1"
-                       HorizontalAlignment="Center"
-                       Margin="12">
-                <Label VerticalAlignment="Center">Camera</Label>
-                <ComboBox MinWidth="160"
-                          Margin="12,0"
-                          IsEnabled="{Binding ElementName=tbnToggleCamera, Path=IsChecked, Converter={StaticResource negate}, Mode=OneWay}"
-                          ItemsSource="{Binding Cameras, Mode=OneWay}"
-                          SelectedItem="{Binding SelectedCamera, Mode=OneWay}"/>
-                <ToggleButton Name="tbnToggleCamera"
-                              IsEnabled="{Binding HasSelectedCamera, Mode=OneWay}"
-                              IsChecked="{Binding IsCameraCapturing, Mode=OneWay}"
-                              Command="{x:Static commands:ToggleCamera.Instance}" />
-            </WrapPanel>
+                <WrapPanel Grid.Column="1"
+                           HorizontalAlignment="Center"
+                           Margin="12">
+                    <Label VerticalAlignment="Center"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,12,0"
+                           Content="Camera"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox Grid.Column="0"
+                                  MinWidth="160"
+                                  IsEnabled="{Binding ElementName=tbnToggleCamera, Path=IsChecked, Converter={StaticResource negate}, Mode=OneWay}"
+                                  ItemsSource="{Binding Cameras, Mode=OneWay}"
+                                  SelectedItem="{Binding SelectedCamera, Mode=OneWay}"/>
+                        <ToggleButton Name="tbnToggleCamera" Grid.Column="1"
+                                      Margin="12,0,0,0"
+                                      IsEnabled="{Binding HasSelectedCamera, Mode=OneWay}"
+                                      IsChecked="{Binding IsCameraCapturing, Mode=OneWay}"
+                                      Command="{x:Static commands:ToggleCamera.Instance}" />
+                    </Grid>
+                </WrapPanel>
+            </Grid>
 
-            <Grid Grid.Row="1" Grid.ColumnSpan="2"
+            <Grid Grid.Row="1"
                   Background="Black"
                   ClipToBounds="True">
                 <Grid.Style>
@@ -79,6 +98,7 @@
                         </Style.Triggers>
                     </Style>
                 </Grid.Style>
+                
                 <DockPanel RenderTransformOrigin="0.5,0.5">
                     <DockPanel.RenderTransform>
                         <TransformGroup>
@@ -93,7 +113,8 @@
                         <Image Source="{Binding CameraFrame, Mode=OneWay}"
                                Stretch="None"/>
                 </DockPanel>
-                <Canvas x:Name="cnvViewportTopLayer">
+                
+                <Canvas x:Name="cnvViewportOverlay">
                     <Ellipse Width="{Binding CursorSize, Mode=OneWay}"
                              Height="{Binding CursorSize, Mode=OneWay}"
                              Stroke="{Binding CursorBrush, Mode=OneWay}"
@@ -102,59 +123,51 @@
                              Canvas.Top="{Binding CursorY, Mode=OneWay}"/>
                 </Canvas>
             </Grid>
-        </Grid>
-        <StackPanel Grid.RowSpan="100" Grid.ColumnSpan="100"
-                    VerticalAlignment="Center">
-            <StackPanel.Style>
-                <Style TargetType="StackPanel">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding HasHandTrackers, Mode=OneWay}" Value="True">
-                            <Setter Property="Visibility" Value="Collapsed" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </StackPanel.Style>
-
-            <TextBlock FontSize="46"
-                   Foreground="#BBBBBB"
-                   HorizontalAlignment="Center"
-                   TextWrapping="Wrap"
-                   Text="Hand tracking is not available">
-            </TextBlock>
-            <Separator Margin="12"
-                       MaxWidth="892"/>
-            <TextBlock FontSize="16"
-                       Foreground="#BBBBBB"
-                       HorizontalAlignment="Center"
-                       TextWrapping="Wrap"
-                       Visibility="Collapsed"
-                       Text="Leap Motion is not installed">
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsHandTrackerReady, Mode=OneWay}" Value="False">
-                                <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBlock.Style>
-            </TextBlock>
-            <TextBlock FontSize="16"
-                       Foreground="#BBBBBB"
-                       HorizontalAlignment="Center"
-                       TextWrapping="Wrap"
-                       Visibility="Visible"
-                       Text="No Leap Motion devices attached">
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock">
+        
+            <StackPanel Grid.Row="1"
+                        VerticalAlignment="Center">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding HasHandTrackers, Mode=OneWay}" Value="True">
-                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Setter Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                </TextBlock.Style>
-            </TextBlock>
-        </StackPanel>
+                </StackPanel.Style>
+
+                <TextBlock FontSize="46"
+                       Foreground="#BBBBBB"
+                       HorizontalAlignment="Center"
+                       TextWrapping="Wrap"
+                       Text="Hand tracking is not available">
+                </TextBlock>
+                <Separator Margin="12"
+                           MaxWidth="892"/>
+                <TextBlock FontSize="16"
+                           Foreground="#BBBBBB"
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap"
+                           Visibility="{Binding IsHandTrackerReady, Mode=OneWay, Converter={StaticResource bool2vis}, ConverterParameter={StaticResource not}}"
+                           Text="Leap Motion is not installed">
+                </TextBlock>
+                <TextBlock FontSize="16"
+                           Foreground="#BBBBBB"
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap"
+                           Visibility="{Binding IsHandTrackerReady, Mode=OneWay, Converter={StaticResource bool2vis}}"
+                           Text="No Leap Motion devices attached">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasHandTrackers, Mode=OneWay}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>
