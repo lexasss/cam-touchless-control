@@ -5,7 +5,7 @@ namespace CameraTouchlessControl;
 
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
-    public MainViewModel? ViewModel
+    public MainViewModel ViewModel
     {
         get => field;
         private set
@@ -51,5 +51,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 InputBindings.Add(command.KeyBinding);
             }
         }
+    }
+
+    private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        ViewModel?.UpdateLayoutMode(e.NewSize);
     }
 }

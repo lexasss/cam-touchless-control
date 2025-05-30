@@ -7,12 +7,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <LangVersion>preview</LangVersion>
+    <ApplicationIcon>assets\images\logo.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="App.xaml.cs~RF4c71919.TMP" />
+    <None Remove="assets\images\logo.png" />
     <None Remove="Commands\ZoomInCommand.cs~RFfb3f6f6.TMP" />
     <None Remove="Models\DShowCamera.cs~RF600a8e3.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="assets\images\logo.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +31,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LeapMotion.Net\LeapMotion.Net.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="assets\images\logo.png" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
