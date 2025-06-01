@@ -35,9 +35,9 @@
         </Grid.ColumnDefinitions>
 
         <Grid x:Name="grdControls"
-              Grid.Row="{Binding ControlsLayoutRow, Mode=OneWay, FallbackValue=0}"
-              Grid.Column="{Binding ControlsLayoutColumn, Mode=OneWay, FallbackValue=1}"
-              MaxWidth="{Binding ControlLayoutMaxWidth, Mode=OneWay, FallbackValue=960}"
+              Grid.Row="{Binding Layout.ControlsRow, Mode=OneWay, FallbackValue=0}"
+              Grid.Column="{Binding Layout.ControlsColumn, Mode=OneWay, FallbackValue=1}"
+              MaxWidth="{Binding Layout.ControlsMaxWidth, Mode=OneWay, FallbackValue=960}"
               VerticalAlignment="Center"
               HorizontalAlignment="Center">
             <Grid.ColumnDefinitions>
@@ -65,7 +65,7 @@
                               Margin="4"
                               IsEnabled="{Binding ElementName=tbnToggleTrackingDevice, Path=IsChecked, Converter={StaticResource negate}, Mode=OneWay}"
                               ItemsSource="{Binding HandTrackers, Mode=OneWay}"
-                              SelectedItem="{Binding SelectedHandTracker, Mode=OneWay}"/>
+                              SelectedItem="{Binding SelectedHandTracker, Mode=TwoWay}"/>
                     <ToggleButton Name="tbnToggleTrackingDevice" Grid.Column="1"
                                   Margin="12,0,0,0"
                                   IsEnabled="{Binding HasSelectedHandTracker, Mode=OneWay}"
@@ -75,8 +75,8 @@
             </WrapPanel>
 
             <WrapPanel x:Name="wrpCamera"
-                       Grid.Row="{Binding CameraLayoutRow, Mode=OneWay, FallbackValue=0}"
-                       Grid.Column="{Binding CameraLayoutColumn, Mode=OneWay, FallbackValue=1}"
+                       Grid.Row="{Binding Layout.CameraControlRow, Mode=OneWay, FallbackValue=0}"
+                       Grid.Column="{Binding Layout.CameraControlColumn, Mode=OneWay, FallbackValue=1}"
                        HorizontalAlignment="Center"
                        Margin="12">
                 <Label VerticalAlignment="Center"
@@ -93,7 +93,7 @@
                               Margin="4"
                               IsEnabled="{Binding ElementName=tbnToggleCamera, Path=IsChecked, Converter={StaticResource negate}, Mode=OneWay}"
                               ItemsSource="{Binding Cameras, Mode=OneWay}"
-                              SelectedItem="{Binding SelectedCamera, Mode=OneWay}"/>
+                              SelectedItem="{Binding SelectedCamera, Mode=TwoWay}"/>
                     <ToggleButton Name="tbnToggleCamera" Grid.Column="1"
                                   Margin="12,0,0,0"
                                   IsEnabled="{Binding HasSelectedCamera, Mode=OneWay}"

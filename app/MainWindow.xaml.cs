@@ -55,6 +55,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        ViewModel?.UpdateLayoutMode(e.NewSize);
+        ViewModel?.Layout.Update(e.NewSize);
     }
 }

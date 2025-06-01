@@ -45,10 +45,8 @@ public class CameraService : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public bool Open(Camera camera, [System.Runtime.CompilerServices.CallerMemberName] string caller = "")
+    public bool Open(Camera camera)
     {
-        System.Diagnostics.Debug.WriteLine($"Open called by {caller}");
-
         if (_capture != null)
             return true;
 
@@ -77,12 +75,10 @@ public class CameraService : IDisposable
         return true;
     }
 
-    public void ShutdownCapture([System.Runtime.CompilerServices.CallerMemberName]string caller = "")
+    public void ShutdownCapture()
     {
         if (_capture != null)
         {
-            System.Diagnostics.Debug.WriteLine($"ShutdownCapture called by {caller}");
-
             _isBreakRequested = true;
             OpenedCamera = null;
 

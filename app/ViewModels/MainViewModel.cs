@@ -1,10 +1,10 @@
 ﻿using CameraTouchlessControl.Services;
+using CameraTouchlessControl.ViewModels;
 using OpenCvSharp.WpfExtensions;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
@@ -239,59 +239,7 @@ public class MainViewModel : INotifyPropertyChanged
 
     #endregion
 
-    #region Layout
-
-    public int ControlsLayoutRow
-    {
-        get => field;
-        set
-        {
-            field = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ControlsLayoutRow)));
-        }
-    } = 0;
-
-    public int ControlsLayoutColumn
-    {
-        get => field;
-        set
-        {
-            field = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ControlsLayoutColumn)));
-        }
-    } = 1;
-
-    public int CameraLayoutRow
-    {
-        get => field;
-        set
-        {
-            field = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CameraLayoutRow)));
-        }
-    } = 0;
-
-    public int CameraLayoutColumn
-    {
-        get => field;
-        set
-        {
-            field = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CameraLayoutColumn)));
-        }
-    } = 1;
-
-    public double ControlLayoutMaxWidth
-    {
-        get => field;
-        set
-        {
-            field = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ControlLayoutMaxWidth)));
-        }
-    } = 960;
-
-    #endregion
+    public MainLayoutViewModel Layout { get; } = new();
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -347,31 +295,7 @@ public class MainViewModel : INotifyPropertyChanged
         _zoomPanService.HandStateChanged += ZoomPanService_HandStateChanged;
     }
 
-    public void UpdateLayoutMode(Size windowSize)
-    {
-        var aspect = windowSize.Width / windowSize.Height;
-        var newLayoutMode = windowSize.Width > 960 && aspect > 1.78 ? LayoutMode.Wide : LayoutMode.Narrow;
-
-        if (newLayoutMode == _layoutMode)
-            return;
-
-        _layoutMode = newLayoutMode;
-
-
-        ControlsLayoutRow = _layoutMode == LayoutMode.Narrow ? 0 : 1;
-        ControlsLayoutColumn = _layoutMode == LayoutMode.Narrow ? 1 : 0;
-        CameraLayoutRow = _layoutMode == LayoutMode.Narrow ? 0 : 1;
-        CameraLayoutColumn = _layoutMode == LayoutMode.Narrow ? 1 : 0;
-        ControlLayoutMaxWidth = _layoutMode == LayoutMode.Narrow ? 960 : 500;
-    }
-
     // Internal
-
-    enum LayoutMode
-    {
-        Narrow,
-        Wide
-    }
 
     const float HAND_CUSOR_MOVEMENT_SCALE = 10;
     const float HAND_CUSOR_SIZE_SCALE = 3;
@@ -384,8 +308,6 @@ public class MainViewModel : INotifyPropertyChanged
     readonly CameraService _cameraService;
     readonly ZoomPanService _zoomPanService;
     readonly Dispatcher _dispatcher;
-
-    LayoutMode _layoutMode = LayoutMode.Narrow;
 
     private void EnsureSomeHandTrackerIsSelected()
     {

@@ -46,5 +46,5 @@ public class UsbDevice
         System.Diagnostics.Debug.WriteLine($"{Name} {ID} {Description} {Manufacturer} {KernelStreamingCategory} {ManufacturerID}");
     }
 
-    public override string ToString() => Name;
+    public override string ToString() => Name + " [" + new string(ID.Split('\\').Last().Where((c, i) => i > 1 && i < 6).ToArray()) + "]";
 }
