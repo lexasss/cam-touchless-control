@@ -119,19 +119,20 @@
             <DockPanel RenderTransformOrigin="0.5,0.5">
                 <DockPanel.RenderTransform>
                     <TransformGroup>
-                        <ScaleTransform ScaleX="{Binding Scale, Mode=OneWay}"
-                                        ScaleY="{Binding Scale, Mode=OneWay}"/>
+                        <ScaleTransform ScaleX="{Binding ZoomPan.Scale, Mode=OneWay}"
+                                        ScaleY="{Binding ZoomPan.Scale, Mode=OneWay}"/>
                         <SkewTransform/>
                         <RotateTransform/>
-                        <TranslateTransform X="{Binding OffsetX, Mode=OneWay}"
-                                            Y="{Binding OffsetY, Mode=OneWay}"/>
+                        <TranslateTransform X="{Binding ZoomPan.OffsetX, Mode=OneWay}"
+                                            Y="{Binding ZoomPan.OffsetY, Mode=OneWay}"/>
                     </TransformGroup>
                 </DockPanel.RenderTransform>
-                    <Image Source="{Binding CameraFrame, Mode=OneWay}"
-                           Stretch="None"/>
+                <Image Source="{Binding CameraFrame, Mode=OneWay}"
+                       Stretch="None"/>
             </DockPanel>
                 
-            <Canvas x:Name="cnvViewportOverlay">
+            <Canvas x:Name="cnvViewportOverlay"
+                    DataContext="{Binding ZoomPan, Mode=OneWay}">
                 <Ellipse Width="{Binding CursorSize, Mode=OneWay}"
                          Height="{Binding CursorSize, Mode=OneWay}"
                          Stroke="{Binding CursorBrush, Mode=OneWay}"

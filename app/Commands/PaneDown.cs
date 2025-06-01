@@ -16,5 +16,5 @@ internal class PaneDown : MainViewCommand
     }
 
     protected override void Execute(object? parameter) =>
-        _vm.OffsetY += ZoomPanConfig.Instance.PanGain;
+        _vm.ZoomPan.OffsetY += ZoomPanConfig.Instance.PanGain;
 }

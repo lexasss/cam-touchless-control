@@ -16,5 +16,5 @@ internal class ZoomIn : MainViewCommand
     }
 
     protected override void Execute(object? parameter) =>
-        _vm.Scale *= ZoomPanConfig.Instance.ZoomGain;
+        _vm.ZoomPan.Scale *= ZoomPanConfig.Instance.ZoomGain;
 }

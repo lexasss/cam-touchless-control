@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel;
 using System.Windows;
 
-namespace CameraTouchlessControl.ViewModels;
+namespace CameraTouchlessControl;
 
-public class MainLayoutViewModel : INotifyPropertyChanged
+public class LayoutViewModel : INotifyPropertyChanged
 {
     #region Layout
 

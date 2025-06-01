@@ -29,7 +29,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             app.ZoomPanService,
             Dispatcher);
 
-        ViewModel.RequestViewportSize += (s, e) => e.ViewportSize =
+        ViewModel.ZoomPan.RequestViewportSize += (s, e) => e.ViewportSize =
             new Size(cnvViewportOverlay.ActualWidth, cnvViewportOverlay.ActualHeight);
 
         Commands.MainViewCommand[] commands = [
