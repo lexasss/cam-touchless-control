@@ -16,5 +16,5 @@ internal class ToggleCamera : MainViewCommand
     }
 
     protected override void Execute(object? parameter) =>
-        _vm.IsCameraCapturing = !_vm.IsCameraCapturing;
+        _vm.Camera.IsCameraCapturing = !_vm.Camera.IsCameraCapturing;
 }
