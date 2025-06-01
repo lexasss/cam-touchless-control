@@ -55,7 +55,7 @@
                 <Label VerticalAlignment="Center"
                        Margin="0,0,12,0"
                        Content="Hand tracker"/>
-                <Grid>
+                <Grid DataContext="{Binding HandTracker, Mode=OneTime}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
                         <ColumnDefinition Width="Auto"/>
@@ -83,7 +83,7 @@
                        HorizontalAlignment="Center"
                        Margin="0,0,12,0"
                        Content="Camera"/>
-                <Grid DataContext="{Binding Camera, Mode=OneWay}">
+                <Grid DataContext="{Binding Camera, Mode=OneTime}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
                         <ColumnDefinition Width="Auto"/>
@@ -132,7 +132,7 @@
             </DockPanel>
                 
             <Canvas x:Name="cnvViewportOverlay"
-                    DataContext="{Binding ZoomPan, Mode=OneWay}">
+                    DataContext="{Binding ZoomPan, Mode=OneTime}">
                 <Ellipse Width="{Binding CursorSize, Mode=OneWay}"
                          Height="{Binding CursorSize, Mode=OneWay}"
                          Stroke="{Binding CursorBrush, Mode=OneWay}"
@@ -143,6 +143,7 @@
         </Grid>
         
         <StackPanel Grid.Row="1" Grid.Column="1"
+                    DataContext="{Binding HandTracker, Mode=OneTime}"
                     VerticalAlignment="Center">
             <StackPanel.Style>
                 <Style TargetType="StackPanel">

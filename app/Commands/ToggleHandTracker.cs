@@ -16,5 +16,5 @@ internal class ToggleHandTracker : MainViewCommand
     }
 
     protected override void Execute(object? parameter) =>
-        _vm.IsHandTrackingRunning = !_vm.IsHandTrackingRunning;
+        _vm.HandTracker.IsHandTrackingRunning = !_vm.HandTracker.IsHandTrackingRunning;
 }
