@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 
-namespace CameraTouchlessControl;
+namespace CameraTouchlessControl.Services.Obsolete;
 
 public static class VideoInputEnumerator
 {

@@ -1,4 +1,4 @@
-﻿namespace CameraTouchlessControl.Services;
+﻿namespace CameraTouchlessControl;
 
 internal class LowPassFilterService
 {

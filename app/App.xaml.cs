@@ -1,5 +1,4 @@
-﻿using CameraTouchlessControl.Services;
-using System.Windows;
+﻿using System.Windows;
 
 namespace CameraTouchlessControl;
 

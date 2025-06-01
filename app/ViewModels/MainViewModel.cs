@@ -1,5 +1,4 @@
-﻿using CameraTouchlessControl.Services;
-using CameraTouchlessControl.ViewModels;
+﻿using CameraTouchlessControl.ViewModels;
 using OpenCvSharp.WpfExtensions;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -302,7 +301,7 @@ public class MainViewModel : INotifyPropertyChanged
 
     readonly Brush StillCursorBrush = new SolidColorBrush(Color.FromArgb(96, 255, 255, 255));
     readonly Brush AdjustingCursorBrush = new SolidColorBrush(Color.FromArgb(255, 0, 255, 0));
-    readonly Brush MovingCursorBrush = new SolidColorBrush(Color.FromArgb(192, 255, 128, 0));
+    readonly Brush MovingCursorBrush = new SolidColorBrush(Color.FromArgb(214, 255, 128, 0));
 
     readonly HandTrackingService _handTrackingService;
     readonly CameraService _cameraService;
@@ -461,9 +460,9 @@ public class MainViewModel : INotifyPropertyChanged
         Scale = e;
     }
 
-    private void ZoomPanService_HandStateChanged(object? sender, ZoomPanService.HandState e)
+    private void ZoomPanService_HandStateChanged(object? sender, HandState e)
     {
-        if (e == ZoomPanService.HandState.Invisible)
+        if (e == HandState.Invisible)
         {
             CursorX = -1e8;
             CursorY = -1e8;
@@ -472,9 +471,9 @@ public class MainViewModel : INotifyPropertyChanged
         {
             CursorBrush = e switch
             {
-                ZoomPanService.HandState.Still => StillCursorBrush,
-                ZoomPanService.HandState.Adjusting => AdjustingCursorBrush,
-                ZoomPanService.HandState.Moving => MovingCursorBrush,
+                HandState.Still => StillCursorBrush,
+                HandState.Adjusting => AdjustingCursorBrush,
+                HandState.Moving => MovingCursorBrush,
                 _ => CursorBrush
             };
         }

@@ -1,6 +1,6 @@
 ﻿using OpenCvSharp;
 
-namespace CameraTouchlessControl;
+namespace CameraTouchlessControl.Services.Obsolete;
 
 public static class CameraDeviceEnumerator
 {
